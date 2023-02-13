@@ -1,0 +1,3997 @@
+button_card_templates:
+  settings:
+    variables:
+      entity_tablet: switch.galaxy_tab_s2_screensaver
+      entity_browser_mod: media_player.galaxy_tab_s2_media_player
+      translate_unknown: Unknown
+      translate_idle: Inactive
+      translate_home: Home
+      translate_not_home: Away
+  base:
+    variables:
+      state: |
+        [[[ return entity === undefined || entity.state; ]]]
+    aspect_ratio: 1/1
+    triggers_update: all
+    tap_action:
+      action: toggle
+      haptic: medium
+      ui_sound_tablet: |
+        [[[
+          let screensaver = states[variables.entity_tablet] === undefined || 
+            states[variables.entity_tablet].state;
+
+          if (screensaver === 'off') {
+            hass.callService('media_player', 'play_media', {
+              entity_id: variables.entity_browser_mod,
+              media_content_id: '/local/sound/tap.m4a',
+              media_content_type: 'music'
+            });
+          }
+        ]]]
+      animation_card: |
+        [[[
+          let time = 900;
+          this.shadowRoot.getElementById('card').style.animation =
+            `card_bounce ${time}ms cubic-bezier(0.22, 1, 0.36, 1)`,
+            window.setTimeout(() => {
+              this.shadowRoot.getElementById('card').style.animation = 'none'
+            }, time);
+        ]]]
+    hold_action:
+      action: more-info
+      haptic: success
+    show_state: true
+    styles:
+      card:
+        - font-size: 12px
+        - padding: 7%
+      icon:
+        - color: var(--text-color)
+        - width: 25px
+        - align-items: start
+        - justify-content: start
+        - margin-top: '-40px'
+        - margin-left: '-10px'
+      grid:
+        - grid-template-areas: '"i l l w" "n n n n" "s s s s"'
+        - grid-template-columns: 0.35fr 0.15fr 0.15fr 0.3fr
+        - grid-template-rows: 1fr min-content min-content
+        - align-items: start
+      img_cell:
+        - align-self: start
+        - text-align: start
+      name:
+        - justify-self: start
+        - padding: 0
+      state:
+        - justify-self: start
+        - padding: 0
+        - font-size: 15px
+      custom_fields:
+        w:
+          - justify-content: flex-end
+          - align-items: flex-end
+          - padding-top: 10px
+          - color: '#c9c9c9'
+    state:
+      - value: 'on'
+        styles:
+          card:
+            - background-color: var(--accent-color)
+      - value: 'off'
+        styles:
+          state:
+            - color: var(--disabled-text-color)
+          custom_fields:
+            custom_state:
+              - color: var(--disabled-text-color)
+      - value: unlocked
+        styles:
+          card:
+            - background-color: '#ff9800'
+      - value: locked
+        styles:
+          state:
+            - color: var(--disabled-text-color)
+          custom_fields:
+            custom_state:
+              - color: var(--disabled-text-color)
+      - value: open
+        styles:
+          card:
+            - background-color: var(--accent-color)
+      - value: closed
+        styles:
+          state:
+            - color: var(--disabled-text-color)
+    extra_styles: |
+      [[[
+        return `
+          #container {
+            text-align: left !important;
+          }
+          @keyframes card_bounce {
+            0% {
+              transform: scale(1);
+            }
+            15% {
+              transform: scale(0.9);
+            }
+            25% {
+              transform: scale(1);
+            }
+            30% {
+              transform: scale(0.98);
+            }
+            100% {
+              transform: scale(1);
+            }
+          }
+          .marquee {
+            animation: marquee 20s linear infinite;
+          }
+          @keyframes marquee {
+            from {
+              transform: translateX(0%);
+            }
+            to {
+              transform: translateX(-50%);
+            }
+          }
+        `
+      ]]]
+    custom_fields:
+      w: |
+        [[[ 
+          var id = entity.entity_id;
+          var first = id.substring(0,id.indexOf("."));
+          var second = id.substring(id.indexOf("."),id.length);
+          var newid = "sensor" + second + "_power";
+          try {
+            var domain = states[newid].domain;
+          }
+          catch(err) {
+            return "";
+          }
+          if (entity.state == "on" && first == "light" && states[newid].state > 0) {
+            var power = states[newid].state;
+            if(power >= 1) { return Math.round(states[newid].state) + "W"; }
+            else { return states[newid].state + "W"; }
+          }
+        ]]]
+  show_brightness:
+    show_state: false
+    tap_action:
+      action: toggle
+    double_tap_action:
+      action: fire-dom-event
+      browser_mod:
+        command: popup
+        title: |
+          [[[ return entity.attributes.friendly_name]]]
+        style:
+          border-radius: 10px
+          '--ha-card-border-radius': 0px
+        card:
+          type: tile
+          style: |
+            ha-card {
+              padding: 10px;
+            }
+          entity: |
+            [[[ return entity.entity_id ]]]
+          tap_action:
+            action: toggle
+          icon_tap_action:
+            action: toggle
+          features:
+            - type: light-brightness
+    styles:
+      grid:
+        - grid-template-areas: >-
+            "i l l w" "n n n n" "custom_state custom_state custom_state
+            custom_state"
+      custom_fields:
+        custom_state:
+          - justify-self: start
+    custom_fields:
+      custom_state: |
+        [[[ 
+          if (entity.state == "on") return `${Math.round(states[entity.entity_id].attributes.brightness / 255 * 100)}%`; 
+          else return `Off`; 
+        ]]]
+  garage_lock:
+    template:
+      - base
+    show_state: false
+    styles:
+      grid:
+        - grid-template-areas: >-
+            "i l l w" "n n n n" "custom_state custom_state custom_state
+            custom_state"
+      custom_fields:
+        custom_state:
+          - justify-self: start
+    icon: |
+      [[[
+        if(entity.state == 'unlocked') return 'mdi:garage-open-variant';
+        else return 'mdi:lock';
+      ]]]
+    custom_fields:
+      custom_state: |
+        [[[
+          if(entity.state == 'locked') return "Suletud"; else return "Avatud"
+        ]]]
+    state:
+      - value: unlocked
+        styles:
+          card:
+            - background-color: var(--alarm-color-armed)
+  sensor:
+    template:
+      - base
+    tap_action:
+      action: more-info
+    layout: icon_state
+    show_state: false
+    show_last_changed: true
+    styles:
+      grid:
+        - grid-template-areas: '"i s s" "n n n" "l l l"'
+        - grid-template-columns: 0.4fr 0.2fr 0.3fr
+      label:
+        - justify-self: start
+        - color: '#b0b6be'
+    state:
+      - value: 'on'
+        styles:
+          card:
+            - background-color: var(--ha-card-background)
+          icon:
+            - color: var(--accent-color)
+  motion:
+    template:
+      - sensor
+    styles:
+      icon:
+        - width: 15px
+        - margin-left: '-20px'
+        - margin-top: '-30px'
+      label:
+        - margin-bottom: '-7px'
+  door:
+    template:
+      - sensor
+    styles:
+      icon:
+        - margin-left: '-10px'
+        - margin-top: '-30px'
+      label:
+        - margin-bottom: '-7px'
+    state:
+      - value: 'on'
+        styles:
+          icon:
+            - color: var(--text-color)
+          card:
+            - background-color: var(--alarm-color-armed)
+  input_boolean:
+    template:
+      - door
+    tap_action:
+      action: call-service
+      service: input_boolean.turn_off
+      service_data:
+        entity_id: |
+          [[[ return entity.entity_id ]]]
+  vacuum_service:
+    color: var(--text-color)
+    aspect_ratio: 1/1
+    entity: vacuum.tuuba
+    tap_action:
+      action: call-service
+      service_data:
+        entity_id: vacuum.tuuba
+    lock:
+      enabled: |
+        [[[ return variables.enabled ]]]
+      exemptions: []
+    styles:
+      lock:
+        - color: var(--primary-text-color)
+    state:
+      - operator: template
+        value: |
+          [[[ return variables.enabled ]]]
+        styles:
+          card:
+            - color: var(--disabled-text-color)
+  vacuum_service_nonsq:
+    color: var(--text-color)
+    entity: vacuum.tuuba
+    tap_action:
+      action: call-service
+      service_data:
+        entity_id: vacuum.tuuba
+    lock:
+      enabled: |
+        [[[ return variables.enabled ]]]
+      exemptions: []
+    styles:
+      card:
+        - height: 80px
+      lock:
+        - color: var(--primary-text-color)
+    state:
+      - operator: template
+        value: |
+          [[[ return variables.enabled ]]]
+        styles:
+          card:
+            - color: var(--disabled-text-color)
+  vacuum_room:
+    color: var(--text-color)
+    aspect_ratio: 1/1
+    variables:
+      lock_enabled: >
+        [[[ return ['cleaning', 'paused'].includes(states['vacuum.tuuba'].state)
+        ]]]
+    state:
+      - operator: template
+        value: |
+          [[[ return variables.lock_enabled && entity.state == 0 ]]]
+        styles:
+          card:
+            - color: var(--disabled-text-color)
+      - styles:
+          card:
+            - background-color: var(--primary-color)
+        operator: '>='
+        value: 1
+    styles:
+      icon:
+        - height: 35px
+      card:
+        - font-size: 12px
+      grid:
+        - position: relative
+      custom_fields:
+        order:
+          - display: |
+              [[[
+                if (entity.state == "0")
+                  return "none";
+                return "block";
+              ]]]
+          - position: absolute
+          - left: 5%
+          - top: 5%
+          - height: 20px
+          - width: 20px
+          - font-size: 20px
+          - font-weight: bold
+          - line-height: 20px
+    custom_fields:
+      order: |
+        [[[ return entity.state ]]]
+    tap_action:
+      action: call-service
+      service: script.deebot_room_queue
+      service_data:
+        queue: input_text.tuuba_queue
+    lock:
+      enabled: |
+        [[[ return variables.lock_enabled ]]]
+      exemptions: []
+title: Home
+background: '#19243a'
+sidebar:
+  width:
+    mobile: 0
+    tablet: 27
+    desktop: 25
+  digitalClock: true
+  date: true
+  hideTopMenu: true
+  showTopMenuOnMobile: true
+  sidebarMenu:
+    - action: navigate
+      navigation_path: /tablet-en/default_view
+      name: OVERVIEW
+      icon: mdi:home
+      active: true
+    - action: navigate
+      navigation_path: /tablet-en/turvalisus
+      name: SAFETY
+      icon: mdi:cctv
+    - action: navigate
+      navigation_path: /tablet-en/elutoad-2
+      name: LIVING ROOM
+    - action: navigate
+      navigation_path: /tablet-en/bedrooms
+      name: BEDROOMS
+    - action: navigate
+      navigation_path: /tablet-en/pesuruumid
+      name: WASHING ROOMS
+    - action: navigate
+      navigation_path: /tablet-en/tehnilised-ja-u
+      name: TECHNICAL
+    - action: navigate
+      navigation_path: /tablet-en/tuuba
+      name: VACUUM
+    - action: navigate
+      navigation_path: /tablet-en/nordpool
+      name: NORDPOOL
+      icon: mdi:chart-bar
+  template: >
+    <li>It's {{ states["sensor.ou_valistemperatuur_771"].state | round(0) }}°C
+    outside and {{ states["sensor.komfovent_status_panel_temperature"].state |
+    round(0) }}°C inside</li>
+
+    {% if states["sensor.lights_on"].state | float == 1 %}     <li>Sisse on
+    lülitatud 1 valgusti</li>     {% elif states["sensor.lights_on"].state |
+    float > 1 %}     <li>{{ states["sensor.lights_on"].state | float | round(0)
+    }} lights are on</li>      {% endif %}  
+
+    {% if states["binary_sensor.esik_valisuks_781"].state == "on" %}<li>Välisuks
+    on avatud ❗</li>{% elif states["binary_sensor.esik_valisuks_781"].state ==
+    "off" and states["lock.esik_valisukse_lukk_795"].state == "unlocked" %}
+    <li>️Front door is unlocked ⚠️</li>️{% endif %}
+
+    {% if states["binary_sensor.garaaz_garaaziuks_628"].state == "on"
+    %}<li>Garage door is open ❗</li>{% endif %}
+
+    {% if states["input_boolean.trash_collection_active"].state == "on"
+    %}<li>Put the trash bin out ❗</li>{% endif %}
+
+    {% if states["input_boolean.tank_needs_emptying"].state == "on"
+    %}<li>Collection tank is full ❗</li>{% endif %}
+
+    {% if states["input_boolean.dryer_needs_emptying"].state == "on" and
+    states["input_boolean.washer_needs_emptying"].state == "on" %} <li>Washer
+    and dryier need attention</li>   {% elif
+    states["input_boolean.dryer_needs_emptying"].state == "on" %} <li>Please
+    empty the dryer</li>  {% elif
+    states["input_boolean.washer_needs_emptying"].state == "on" %} <li>Please
+    empty the washer</li> {% endif %}
+  bottomCard:
+    type: vertical-stack
+    cardOptions:
+      cards:
+        - type: custom:paper-buttons-row
+          styles:
+            '--pbs-button-active-color': '#fff'
+            '--pbs-button-color': '#fff'
+          buttons:
+            - entity: sensor.presentstate
+              name: false
+              layout: icon_state
+              state_text:
+                home: Home
+                away: Away
+                holiday: Holiday
+              state_icons:
+                home: mdi:home
+                holiday: mdi:bag-suitcase
+              style:
+                button:
+                  padding: 5px 10px
+                icon:
+                  margin-bottom: 7px
+                  '--mdc-icon-size': 25px
+              tap_action:
+                action: call-service
+                service: scene.turn_on
+                service_data:
+                  entity_id: scene.variables_toggle_presentstate
+              hold_action:
+                action: more-info
+            - entity: sensor.timeofday
+              name: false
+              layout: icon_state
+              state_text:
+                day: Day
+                evening: Evening
+              state_icons:
+                evening: mdi:moon-waning-crescent
+              style:
+                button:
+                  padding: 5px 10px
+                icon:
+                  margin-bottom: 7px
+                  '--mdc-icon-size': 25px
+              tap_action:
+                action: call-service
+                service: scene.turn_on
+                service_data:
+                  entity_id: scene.variables_toggle_timeofday
+              hold_action:
+                action: more-info
+            - entity: sensor.sleepstate
+              name: false
+              layout: icon_state
+              state_text:
+                awake: Awake
+                sleeping: Sleeping
+              state_icons:
+                awake: mdi:account
+              style:
+                button:
+                  padding: 5px 10px
+                icon:
+                  margin-bottom: 7px
+                  '--mdc-icon-size': 25px
+              tap_action:
+                action: call-service
+                service: scene.turn_on
+                service_data:
+                  entity_id: scene.variables_toggle_sleepstate
+              hold_action:
+                action: more-info
+            - entity: sensor.guestmode
+              name: false
+              layout: icon_state
+              state_text:
+                family: Family
+                guests: Guests
+              state_icons:
+                family: mdi:human-male-female-child
+              style:
+                button:
+                  padding: 5px 10px
+                icon:
+                  margin-bottom: 7px
+                  '--mdc-icon-size': 25px
+              tap_action:
+                action: call-service
+                service: scene.turn_on
+                service_data:
+                  entity_id: scene.variables_toggle_guestmode
+              hold_action:
+                action: more-info
+          entity_id: lock.front_door
+          align_icons: top
+        - type: horizontal-stack
+          cards:
+            - type: custom:button-card
+              entity: person.jaak
+              show_state: false
+              show_icon: false
+              tap_action:
+                action: more-info
+              styles:
+                card:
+                  - font-size: 15px
+                  - padding: 10px 5px
+                grid:
+                  - grid-template-areas: '"custom_icon n" "custom_icon custom_state"'
+                  - grid-template-columns: 1fr 2.5fr
+                  - grid-template-rows: 0.6fr
+                img_cell:
+                  - align-self: start
+                  - text-align: start
+                name:
+                  - justify-self: start
+                  - padding-top: 5px
+                  - padding-left: 5px
+                  - color: var(--disabled-text-color)
+                custom_fields:
+                  custom_state:
+                    - justify-self: start
+                    - padding-top: 5px
+                    - padding-left: 5px
+                  custom_icon:
+                    - clip-path: circle()
+                    - width: 79%
+                    - pointer-events: none
+                    - display: grid
+                    - width: 30px
+                    - margin: 5px
+              custom_fields:
+                custom_state: |
+                  [[[
+                    if(entity.state == "home") return "Home";
+                    else return `Away`
+                  ]]]
+                custom_icon: >
+                  [[[ return entity === undefined ? null : `<img
+                  src="${states[entity.entity_id].attributes.entity_picture}"
+                  width="100%">`; ]]]
+            - type: custom:button-card
+              entity: person.merilin
+              show_state: false
+              show_icon: false
+              tap_action:
+                action: more-info
+              styles:
+                card:
+                  - font-size: 15px
+                  - padding: 10px 5px
+                grid:
+                  - grid-template-areas: '"custom_icon n" "custom_icon custom_state"'
+                  - grid-template-columns: 1fr 2.5fr
+                  - grid-template-rows: 0.6fr
+                img_cell:
+                  - align-self: start
+                  - text-align: start
+                name:
+                  - justify-self: start
+                  - padding-top: 5px
+                  - padding-left: 5px
+                  - color: var(--disabled-text-color)
+                custom_fields:
+                  custom_state:
+                    - justify-self: start
+                    - padding-top: 5px
+                    - padding-left: 5px
+                  custom_icon:
+                    - clip-path: circle()
+                    - width: 79%
+                    - pointer-events: none
+                    - display: grid
+                    - width: 30px
+                    - margin: 5px
+              custom_fields:
+                custom_state: |
+                  [[[
+                    if(entity.state == "home") return "Home";
+                    else return `Away`
+                  ]]]
+                custom_icon: >
+                  [[[ return entity === undefined ? null : `<img
+                  src="${states[entity.entity_id].attributes.entity_picture}"
+                  width="100%">`; ]]]
+  style: |
+    .sidebarMenu {
+        border: none !important;  
+        font-weight: 100 !important;
+        margin: 0 !important;
+        padding: 20px 0 !important;
+    }
+    .sidebarMenu li.active {
+        font-weight: bold;
+    }
+    .sidebarMenu li {
+        font-size: 16px !important;
+        margin: 0px !important;
+        padding: 7px 20px !important;
+    }
+    h1.digitalClock {
+        color: rgba(255, 255, 255, 0.9)!important;
+        font-size: 65px !important;
+        font-weight: 500!important;
+        letter-spacing: -0.05vw!important;
+        text-align: center;
+        display:inline-block;
+        padding-left: 0px;
+        padding-top: 0px;
+        padding-bottom: 0px !important;
+        margin-bottom: 0px !important;
+    }
+    .date {
+        padding-bottom: 10px;
+        margin-top: 0px !important;
+        padding-top: 0px !important;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 20px;
+        font-weight: 300;
+        text-align: center;
+        letter-spacing: -0.05vw;
+        display:inline-block;
+    }
+    .template li {
+        font-size: 15px !important;
+    }
+views:
+  - path: default_view
+    title: Kodu
+    theme: ''
+    icon: ''
+    type: custom:grid-layout
+    badges: []
+    cards:
+      - type: conditional
+        conditions:
+          - entity: binary_sensor.lights_on_boolean
+            state: 'on'
+        card:
+          type: vertical-stack
+          cards:
+            - type: custom:gap-card
+              height: 10
+            - type: custom:html-card
+              content: Currently relevant
+              style: |
+                .type-custom-html-card {
+                  font-size: 20px;
+                  font-weight: 300;
+                  background: none;
+                  box-shadow: none;
+                  border: none;
+                }
+            - type: grid
+              cards:
+                - type: conditional
+                  conditions:
+                    - entity: light.saun_keris_607
+                      state: 'on'
+                  card:
+                    type: custom:mini-graph-card
+                    name: Saun
+                    points_per_hour: 2
+                    font_size: 90
+                    font_size_header: 10
+                    entities:
+                      - entity: sensor.saun_temperatuur_s_528
+                    hours_to_show: 24
+                    hour24: true
+                    decimals: 1
+                    show:
+                      icon: false
+                    color_thresholds:
+                      - value: 90
+                        color: '#fe0000'
+                      - value: 80
+                        color: '#ff9e07'
+                      - value: 70
+                        color: '#3ab54a'
+                      - value: 60
+                        color: '#05f7f9'
+                      - value: 50
+                        color: '#00ccff'
+                      - value: 40
+                        color: '#017eff'
+                - type: conditional
+                  conditions:
+                    - entity: input_boolean.you_got_mail
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: input_boolean.you_got_mail
+                    template:
+                      - input_boolean
+                - type: conditional
+                  conditions:
+                    - entity: input_boolean.trash_collection_active
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: input_boolean.trash_collection_active
+                    template: input_boolean
+                - type: conditional
+                  conditions:
+                    - entity: input_boolean.tank_needs_emptying
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: input_boolean.tank_needs_emptying
+                    template: input_boolean
+                - type: conditional
+                  conditions:
+                    - entity: lock.esik_valisukse_lukk_795
+                      state: unlocked
+                  card:
+                    type: custom:button-card
+                    entity: lock.esik_valisukse_lukk_795
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: binary_sensor.esik_valisuks_781
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: binary_sensor.esik_valisuks_781
+                    template:
+                      - door
+                - type: conditional
+                  conditions:
+                    - entity: binary_sensor.garaaz_garaaziuks_628
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: lock.garaaziuks
+                    template:
+                      - garage_lock
+                - type: conditional
+                  conditions:
+                    - entity: light.ventilation_vent_intens_or_608
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.ventilation_vent_intens_or_608
+                    name: Ventilatsioon +
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: switch.ohksoojuspump_eco
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: switch.ohksoojuspump_eco
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: switch.chimneystate
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: switch.chimneystate
+                    name: Kamin / kubu
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: media_player.living_room_tv
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: media_player.living_room_tv
+                    tap_action:
+                      action: toggle
+                    hold_action:
+                      action: fire-dom-event
+                      browser_mod:
+                        command: popup
+                        style:
+                          border-radius: 10px
+                          '--ha-card-border-radius': 0px
+                        title: TV
+                        card:
+                          type: custom:lg-remote-control
+                          entity: media_player.living_room_tv
+                          dimensions:
+                            scale: 0.85
+                          colors:
+                            active-background-button-color: '#0080ff'
+                            deactive-background-button-color: '#f2f0fa'
+                            button-border-standard: rgba(0, 128, 255, .5)
+                            state-icon-active-color: '#0080ff'
+                            buttons: '#666'
+                            background: '#333'
+                    aspect_ratio: 1/1
+                    show_state: true
+                    styles:
+                      card:
+                        - font-size: 13px
+                        - padding-right: 5px
+                      icon:
+                        - color: var(--text-color)
+                        - width: 25px
+                        - align-items: start
+                        - justify-content: start
+                        - margin-left: 0px
+                        - margin-top: '-30px'
+                      grid:
+                        - grid-template-areas: '"i l l" "n n n" "s s s"'
+                        - grid-template-columns: 0.4fr 0.2fr 0.3fr
+                        - grid-template-rows: 1fr min-content min-content
+                      img_cell:
+                        - align-self: start
+                        - text-align: start
+                      name:
+                        - justify-self: start
+                        - padding: 0 10px 5px 10px
+                      state:
+                        - justify-self: start
+                        - padding-left: 10px
+                        - padding-bottom: 5px
+                        - font-size: 15px
+                    state:
+                      - value: 'on'
+                        styles:
+                          card:
+                            - background-color: var(--accent-color)
+                      - value: 'off'
+                        styles:
+                          state:
+                            - color: var(--disabled-text-color)
+                - type: conditional
+                  conditions:
+                    - entity: light.elutuba_akna_lambid_177
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.elutuba_akna_lambid_177
+                    template:
+                      - base
+                      - show_brightness
+                - type: conditional
+                  conditions:
+                    - entity: light.elutoa_porandalamp
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.elutoa_porandalamp
+                    name: Elutoa põrand
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: light.elutuba_soogilaud_107
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.elutuba_soogilaud_107
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: light.elutuba_diivanilaud_106
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.elutuba_diivanilaud_106
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: light.elutuba_koridorilambid_111
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.elutuba_koridorilambid_111
+                    template:
+                      - base
+                      - show_brightness
+                - type: conditional
+                  conditions:
+                    - entity: light.kook_laelambid_k_75
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.kook_laelambid_k_75
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: light.kook_toopind_714
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.kook_toopind_714
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: light.esik_laelambid_e_172
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.esik_laelambid_e_172
+                    name: Esik
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: light.vaike_wc_laelambid_w_230
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.vaike_wc_laelambid_w_230
+                    name: WC
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: light.master_magamistuba_laelamp_vt_182
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.master_magamistuba_laelamp_vt_182
+                    name: Magamistoa lagi
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: light.master_magamistuba_voodi_lamp_vasak_144
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.master_magamistuba_voodi_lamp_vasak_144
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: light.master_magamistuba_voodi_lamp_parem_149
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.master_magamistuba_voodi_lamp_parem_149
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: light.johani_tuba_laelamp_719
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.johani_tuba_laelamp_719
+                    name: Johani laelamp
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: light.johani_tuba_voodi_valgustus_285
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.johani_tuba_voodi_valgustus_285
+                    name: Johani öövalgus
+                    template:
+                      - base
+                      - show_brightness
+                - type: conditional
+                  conditions:
+                    - entity: light.marta_tuba_laelamp_m_544
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.marta_tuba_laelamp_m_544
+                    name: Marie laelamp
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: light.ohupall
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.ohupall
+                    name: Marie öövalgus
+                    template:
+                      - base
+                      - show_brightness
+                - type: conditional
+                  conditions:
+                    - entity: light.puhkeruum_laelambid_p_83
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.puhkeruum_laelambid_p_83
+                    name: Puhkeruumi lagi
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: light.eesruum_laelambid_dimmable
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.eesruum_laelambid_dimmable
+                    name: Puhkeruumi ääred
+                    template:
+                      - base
+                      - show_brightness
+                - type: conditional
+                  conditions:
+                    - entity: light.puhkeruum_seinalamp_704
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.puhkeruum_seinalamp_704
+                    name: Puhkeruumi sein
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: light.puhkeruumi_porandalamp
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.puhkeruumi_porandalamp
+                    name: Puhkeruumi põrand
+                    template:
+                      - base
+                      - show_brightness
+                - type: conditional
+                  conditions:
+                    - entity: light.vannituba_laelambid_v_192
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.vannituba_laelambid_v_192
+                    name: Vannituba
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: light.sauna_led_ribad
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.sauna_led_ribad
+                    name: Sauna LED ribad
+                    template:
+                      - base
+                      - show_brightness
+                - type: conditional
+                  conditions:
+                    - entity: light.saun_koristusvalgus_91
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.saun_koristusvalgus_91
+                    name: Sauna põrand
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: light.ou_fassaadivalgus_754
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.ou_fassaadivalgus_754
+                    template:
+                      - base
+                      - show_brightness
+                - type: conditional
+                  conditions:
+                    - entity: light.ou_valguskett_749
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.ou_valguskett_749
+                    template:
+                      - base
+                      - show_brightness
+                - type: conditional
+                  conditions:
+                    - entity: light.aia_valgustid
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.aia_valgustid
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: light.ou_terrassivalgus_86
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.ou_terrassivalgus_86
+                    name: Terrass
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: light.garaaz_laelambid_767
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.garaaz_laelambid_767
+                    name: Garaaž
+                    template:
+                      - base
+                - type: conditional
+                  conditions:
+                    - entity: light.tehnoruum_laelambid_t_682
+                      state: 'on'
+                  card:
+                    type: custom:button-card
+                    entity: light.tehnoruum_laelambid_t_682
+                    name: Tehnoruum
+                    template:
+                      - base
+              columns: 6
+            - type: custom:gap-card
+              height: 10
+      - type: vertical-stack
+        cards:
+          - type: custom:gap-card
+            height: 10
+          - type: custom:html-card
+            content: Scenes
+            style: |
+              .type-custom-html-card {
+                font-size: 30px;
+                font-weight: 300;
+                background: none;
+                box-shadow: none;
+                border: none;
+              }
+          - square: true
+            columns: 8
+            type: grid
+            cards:
+              - type: custom:button-card
+                entity: scene.test
+                name: Evening
+                template:
+                  - base
+                show_state: false
+                tap_action:
+                  action: call-service
+                  service: scene.turn_on
+                  service_data:
+                    entity_id: scene.test
+                styles:
+                  card:
+                    - padding: 10%
+                    - font-size: 11px
+                  icon:
+                    - margin-left: 25%
+                    - margin-top: '-100%'
+              - type: custom:button-card
+                entity: scene.juhtimiskeskus_all_off
+                template:
+                  - base
+                show_state: false
+                icon: mdi:power
+                name: All off
+                tap_action:
+                  action: call-service
+                  service: scene.turn_on
+                  service_data:
+                    entity_id: scene.juhtimiskeskus_all_off
+                styles:
+                  card:
+                    - padding: 10%
+                    - font-size: 11px
+                  icon:
+                    - margin-left: 25%
+                    - margin-top: '-100%'
+              - type: custom:button-card
+                entity: scene.juhtimiskeskus_on_hommik
+                template:
+                  - base
+                show_state: false
+                icon: mdi:white-balance-sunny
+                name: It's morning
+                tap_action:
+                  action: call-service
+                  service: scene.turn_on
+                  service_data:
+                    entity_id: scene.juhtimiskeskus_on_hommik
+                styles:
+                  card:
+                    - padding: 10%
+                    - font-size: 11px
+                  icon:
+                    - margin-left: 25%
+                    - margin-top: '-100%'
+              - type: custom:button-card
+                entity: scene.juhtimiskeskus_kardinad_kinni
+                template:
+                  - base
+                show_state: false
+                icon: mdi:curtains-closed
+                name: It's evening
+                tap_action:
+                  action: call-service
+                  service: scene.turn_on
+                  service_data:
+                    entity_id: scene.juhtimiskeskus_kardinad_kinni
+                styles:
+                  card:
+                    - padding: 10%
+                    - font-size: 11px
+                  icon:
+                    - margin-left: 25%
+                    - margin-top: '-100%'
+              - type: custom:button-card
+                entity: scene.saun_sisse
+                name: Sauna time
+                template:
+                  - base
+                show_state: false
+                tap_action:
+                  action: call-service
+                  service: scene.turn_on
+                  service_data:
+                    entity_id: scene.saun_sisse
+                styles:
+                  card:
+                    - padding: 10%
+                    - font-size: 11px
+                  icon:
+                    - margin-left: 25%
+                    - margin-top: '-100%'
+              - type: custom:button-card
+                entity: scene.saun_sauna_manual_off
+                template:
+                  - base
+                show_state: false
+                icon: mdi:radiator-off
+                name: Sauna off
+                tap_action:
+                  action: call-service
+                  service: scene.turn_on
+                  service_data:
+                    entity_id: scene.saun_sauna_manual_off
+                styles:
+                  card:
+                    - padding: 10%
+                    - font-size: 11px
+                  icon:
+                    - margin-left: 25%
+                    - margin-top: '-100%'
+              - type: custom:button-card
+                entity: scene.laste_uneaeg
+                name: Kids bed time
+                template:
+                  - base
+                show_state: false
+                tap_action:
+                  action: call-service
+                  service: scene.turn_on
+                  service_data:
+                    entity_id: scene.laste_uneaeg
+                styles:
+                  card:
+                    - padding: 10%
+                    - font-size: 11px
+                  icon:
+                    - margin-left: 25%
+                    - margin-top: '-100%'
+              - type: custom:button-card
+                entity: scene.elutuba_movie_time
+                template:
+                  - base
+                show_state: false
+                icon: mdi:popcorn
+                name: Movie time
+                tap_action:
+                  action: call-service
+                  service: scene.turn_on
+                  service_data:
+                    entity_id: scene.elutuba_movie_time
+                styles:
+                  card:
+                    - padding: 10%
+                    - font-size: 11px
+                  icon:
+                    - margin-left: 25%
+                    - margin-top: '-100%'
+      - type: vertical-stack
+        cards:
+          - type: custom:gap-card
+            height: 10
+          - type: custom:html-card
+            content: Climate
+            style: |
+              .type-custom-html-card {
+                font-size: 30px;
+                font-weight: 300;
+                background: none;
+                box-shadow: none;
+                border: none;
+              }
+          - type: grid
+            columns: 6
+            cards:
+              - type: custom:mini-graph-card
+                name: Õu
+                points_per_hour: 4
+                font_size: 90
+                font_size_header: 10
+                entities:
+                  - entity: sensor.ou_valistemperatuur_771
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                  name: true
+                color_thresholds:
+                  - value: 30
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 20
+                    color: '#3ab54a'
+                  - value: 15
+                    color: '#05f7f9'
+                  - value: 10
+                    color: '#00ccff'
+                  - value: -1
+                    color: '#017eff'
+                  - value: -10
+                    color: '#7030a2'
+              - type: custom:mini-graph-card
+                name: Elutuba, köök
+                points_per_hour: 2
+                font_size: 90
+                font_size_header: 10
+                entities:
+                  - entity: sensor.komfovent_status_panel_temperature
+                    show_state: true
+                    name: Elutuba
+                  - entity: sensor.kook_temperatuur_k_735
+                    show_state: false
+                    name: Köök
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                  legend: false
+                color_thresholds:
+                  - value: 25.5
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 24.5
+                    color: '#3ab54a'
+                  - value: 24
+                    color: '#05f7f9'
+                  - value: 23.5
+                    color: '#00ccff'
+                  - value: 23
+                    color: '#017eff'
+              - type: custom:mini-graph-card
+                name: CO2
+                font_size: 80
+                font_size_header: 10
+                points_per_hour: 4
+                entities:
+                  - entity: sensor.co2
+                hours_to_show: 24
+                hour24: true
+                decimals: 0
+                show:
+                  icon: false
+                  name: true
+                color_thresholds:
+                  - value: 1600
+                    color: '#fe0000'
+                  - value: 1100
+                    color: '#ff9e07'
+                  - value: 0
+                    color: '#3ab54a'
+              - type: custom:mini-graph-card
+                name: Õhukvaliteet
+                font_size: 80
+                font_size_header: 10
+                points_per_hour: 4
+                entities:
+                  - entity: sensor.particulate_matter_2_5um_concentration
+                hours_to_show: 24
+                hour24: true
+                decimals: 0
+                show:
+                  icon: false
+                  name: true
+                color_thresholds:
+                  - value: 90
+                    color: '#fe0000'
+                  - value: 30
+                    color: '#ff9e07'
+                  - value: 0
+                    color: '#3ab54a'
+              - type: custom:mini-graph-card
+                name: Õhuniiskus
+                points_per_hour: 4
+                font_size: 63
+                font_size_header: 10
+                entities:
+                  - entity: sensor.humidity
+                    show_state: true
+                    name: Elutuba
+                  - entity: sensor.vannituba_ohuniiskus_v_521
+                    show_state: true
+                    name: Vannituba
+                hours_to_show: 24
+                hour24: true
+                decimals: 0
+                show:
+                  icon: false
+                  name: true
+                  legend: false
+                color_thresholds:
+                  - value: 70
+                    color: '#fe0000'
+                  - value: 60
+                    color: '#ff9e07'
+                  - value: 30
+                    color: '#3ab54a'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 15
+                    color: '#fe0000'
+              - type: custom:mini-graph-card
+                name: Puhkeruum
+                points_per_hour: 2
+                font_size: 90
+                font_size_header: 10
+                entities:
+                  - entity: sensor.puhkeruum_temperatuur_p_446
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                color_thresholds:
+                  - value: 25.5
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 24.5
+                    color: '#3ab54a'
+                  - value: 24
+                    color: '#05f7f9'
+                  - value: 23.5
+                    color: '#00ccff'
+                  - value: 23
+                    color: '#017eff'
+              - type: custom:mini-graph-card
+                name: Vannituba, WC
+                points_per_hour: 2
+                font_size: 90
+                font_size_header: 10
+                entities:
+                  - entity: sensor.vannituba_temperatuur_v_519
+                    show_state: true
+                    name: Vannituba
+                  - entity: sensor.vaike_wc_temperatuur_w_137
+                    show_state: false
+                    name: WC
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                  legend: false
+                color_thresholds:
+                  - value: 25.5
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 24.5
+                    color: '#3ab54a'
+                  - value: 24
+                    color: '#05f7f9'
+                  - value: 23.5
+                    color: '#00ccff'
+                  - value: 23
+                    color: '#017eff'
+              - type: custom:mini-graph-card
+                name: Vanemad
+                points_per_hour: 2
+                font_size: 90
+                font_size_header: 10
+                entities:
+                  - entity: sensor.master_magamistuba_temperatuur_vt_632
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                color_thresholds:
+                  - value: 25.5
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 24.5
+                    color: '#3ab54a'
+                  - value: 24
+                    color: '#05f7f9'
+                  - value: 23.5
+                    color: '#00ccff'
+                  - value: 23
+                    color: '#017eff'
+              - type: custom:mini-graph-card
+                name: Johan
+                points_per_hour: 2
+                font_size: 90
+                font_size_header: 10
+                entities:
+                  - entity: sensor.johani_tuba_temperatuur_j_447
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                color_thresholds:
+                  - value: 25.5
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 24.5
+                    color: '#3ab54a'
+                  - value: 24
+                    color: '#05f7f9'
+                  - value: 23.5
+                    color: '#00ccff'
+                  - value: 23
+                    color: '#017eff'
+              - type: custom:mini-graph-card
+                name: Marie
+                points_per_hour: 2
+                font_size: 90
+                font_size_header: 10
+                entities:
+                  - entity: sensor.marta_tuba_temperatuur_m_630
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                color_thresholds:
+                  - value: 25.5
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 24.5
+                    color: '#3ab54a'
+                  - value: 24
+                    color: '#05f7f9'
+                  - value: 23.5
+                    color: '#00ccff'
+                  - value: 23
+                    color: '#017eff'
+              - type: custom:mini-graph-card
+                name: Esik
+                points_per_hour: 2
+                font_size: 90
+                font_size_header: 10
+                entities:
+                  - entity: sensor.esik_temperatuur_e_153
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                color_thresholds:
+                  - value: 25.5
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 24.5
+                    color: '#3ab54a'
+                  - value: 24
+                    color: '#05f7f9'
+                  - value: 23.5
+                    color: '#00ccff'
+                  - value: 23
+                    color: '#017eff'
+              - type: custom:mini-graph-card
+                name: Garaaž, tehno
+                points_per_hour: 2
+                font_size: 50
+                font_size_header: 10
+                entities:
+                  - entity: sensor.garaaz_temperatuur_g_121
+                    show_state: true
+                    name: Garaaž
+                  - entity: sensor.tehnoruum_temperatuur_t_100
+                    show_state: true
+                    name: Tehnoruum
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                  legend: false
+                color_thresholds:
+                  - value: 25.5
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 24.5
+                    color: '#3ab54a'
+                  - value: 24
+                    color: '#05f7f9'
+                  - value: 23.5
+                    color: '#00ccff'
+                  - value: 23
+                    color: '#017eff'
+      - type: horizontal-stack
+        cards:
+          - type: picture-entity
+            entity: camera.netatmo_parkla
+          - type: custom:vertical-stack-in-card
+            cards:
+              - type: media-control
+                entity: media_player.spotify_jaak_saarepuu
+              - type: custom:spotify-card
+                limit: 8
+                spotify_entity: media_player.spotify_jaak_saarepuu
+                account: default
+                default_device: Chillbox speaker
+                display_style: grid
+                grid_covers_per_row: '9'
+                playlist_type: default
+                height: 0
+                hide_playback_controls: true
+                hide_top_header: true
+  - title: Turvalisus
+    path: turvalisus
+    type: custom:grid-layout
+    badges: []
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:gap-card
+            height: 10
+          - type: custom:html-card
+            content: Locks and sensors
+            style: |
+              .type-custom-html-card {
+                font-size: 30px;
+                font-weight: 300;
+                background: none;
+                box-shadow: none;
+                border: none;
+              }
+          - type: grid
+            cards:
+              - type: custom:button-card
+                entity: lock.esik_valisukse_lukk_795
+                template:
+                  - base
+              - type: custom:button-card
+                entity: lock.garaaziuks
+                template: garage_lock
+              - type: custom:button-card
+                entity: binary_sensor.ou_valisliikumisandur_770
+                name: Parklas liikumine
+                template:
+                  - motion
+              - type: custom:button-card
+                entity: binary_sensor.esik_valisuks_781
+                template: door
+              - type: custom:button-card
+                entity: binary_sensor.garaaz_garaaziuks_628
+                template: door
+              - type: custom:button-card
+                entity: binary_sensor.tehnoruum_tehnoruumi_uks_782
+                template: door
+            columns: 6
+          - type: custom:gap-card
+            height: 10
+          - type: custom:html-card
+            content: Cameras
+            style: |
+              .type-custom-html-card {
+                font-size: 30px;
+                font-weight: 300;
+                background: none;
+                box-shadow: none;
+                border: none;
+              }
+          - type: horizontal-stack
+            cards:
+              - type: vertical-stack
+                cards:
+                  - type: picture-entity
+                    entity: camera.netatmo_parkla
+                    style: |
+                      .type-picture-entity {
+                        height: 203px !important;
+                      }
+                  - type: custom:vertical-stack-in-card
+                    cards:
+                      - type: custom:html-card
+                        content: History
+                        style: |
+                          .type-custom-html-card {
+                            font-size: 20px;
+                            font-weight: 200;
+                            background: none;
+                            box-shadow: none;
+                          }
+                      - type: horizontal-stack
+                        cards:
+                          - type: custom:logbook-card
+                            style: |
+                              .type-custom-logbook-card {
+                                background: none;
+                                box-shadow: none;
+                              }
+                              .item-content span {
+                                font-size: 10px !important;
+                                margin-top: 0px !important;
+                              }
+                              .date {
+                                position: relative !important;
+                                font-size: 20px !important;
+                                top: -40px !important;
+                              }
+                              .item-icon {
+                                margin-top: -10px !important;
+                              }
+                            title: ''
+                            entity: binary_sensor.ou_valisliikumisandur_770
+                            hours_to_show: 6
+                            history: 2
+                            max_items: 3
+                            collapse: 3
+                            date_format: HH:mm
+                            hiddenState:
+                              - 'off'
+                            show:
+                              state: true
+                              duration: true
+                              start_date: true
+                              end_date: false
+                              icon: true
+                              separator: false
+                            state_map:
+                              - label: Parklas liikumine
+                                value: 'on'
+                            duration_labels:
+                              second: ${value} sekund
+                              seconds: ${value} sekundit
+                              minute: ${value} minut
+                              minutes: ${value} minutit
+                              hour: ${value} tund
+                              hours: ${value} tundi
+                              day: ${value} päev
+                              days: ${value} päeva
+              - type: vertical-stack
+                cards:
+                  - type: picture-entity
+                    entity: camera.netatmo_netatmo_welcome
+                    style: |
+                      .type-picture-entity {
+                        height: 203px !important;
+                      }
+                  - type: custom:vertical-stack-in-card
+                    cards:
+                      - type: custom:html-card
+                        content: History
+                        style: |
+                          .type-custom-html-card {
+                            font-size: 20px;
+                            font-weight: 200;
+                            background: none;
+                            box-shadow: none;
+                          }
+                      - type: horizontal-stack
+                        cards:
+                          - type: custom:logbook-card
+                            style: |
+                              .type-custom-logbook-card {
+                                background: none;
+                                box-shadow: none;
+                              }
+                              .item-content span {
+                                font-size: 10px !important;
+                                margin-top: 0px !important;
+                              }
+                              .date {
+                                position: relative !important;
+                                font-size: 20px !important;
+                                top: -40px !important;
+                              }
+                              .item-icon {
+                                margin-top: -10px !important;
+                              }
+                            title: ''
+                            hours_to_show: 6
+                            history: 2
+                            max_items: 3
+                            collapse: 3
+                            date_format: HH:mm
+                            hiddenState:
+                              - 'off'
+                            show:
+                              state: true
+                              duration: true
+                              start_date: true
+                              end_date: false
+                              icon: true
+                              separator: false
+                            state_map:
+                              - label: Välisuks avatud
+                                value: 'on'
+                            entity: binary_sensor.esik_valisuks_781
+                            duration_labels:
+                              second: ${value} sekund
+                              seconds: ${value} sekundit
+                              minute: ${value} minut
+                              minutes: ${value} minutit
+                              hour: ${value} tund
+                              hours: ${value} tundi
+                              day: ${value} päev
+                              days: ${value} päeva
+  - title: Livingrooms
+    path: elutoad-2
+    type: custom:grid-layout
+    theme: ''
+    badges: []
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:gap-card
+            height: 10
+          - type: custom:html-card
+            content: Living room
+            style: |
+              .type-custom-html-card {
+                font-size: 30px;
+                font-weight: 300;
+                background: none;
+                box-shadow: none;
+                border: none;
+              }
+          - type: grid
+            cards:
+              - type: custom:mini-graph-card
+                font_size: 90
+                points_per_hour: 4
+                font_size_header: 10
+                entities:
+                  - entity: sensor.komfovent_status_panel_temperature
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                  name: false
+                color_thresholds:
+                  - value: 25.5
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 24.5
+                    color: '#3ab54a'
+                  - value: 24
+                    color: '#05f7f9'
+                  - value: 23.5
+                    color: '#00ccff'
+                  - value: 23
+                    color: '#017eff'
+              - type: custom:mini-graph-card
+                name: Humidity
+                points_per_hour: 4
+                font_size: 90
+                font_size_header: 10
+                entities:
+                  - entity: sensor.humidity
+                hours_to_show: 24
+                hour24: true
+                decimals: 0
+                show:
+                  icon: false
+                  name: true
+                color_thresholds:
+                  - value: 70
+                    color: '#fe0000'
+                  - value: 60
+                    color: '#ff9e07'
+                  - value: 30
+                    color: '#3ab54a'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 15
+                    color: '#fe0000'
+              - type: custom:swipe-card
+                parameters: null
+                spaceBetween: 20
+                scrollbar:
+                  hide: false
+                  draggable: true
+                  snapOnRelease: true
+                cards:
+                  - type: grid
+                    columns: 1
+                    cards:
+                      - type: custom:mini-graph-card
+                        name: CO2
+                        font_size: 80
+                        font_size_header: 10
+                        points_per_hour: 4
+                        entities:
+                          - entity: sensor.co2
+                        hours_to_show: 24
+                        hour24: true
+                        decimals: 0
+                        show:
+                          icon: false
+                          name: true
+                        color_thresholds:
+                          - value: 1600
+                            color: '#fe0000'
+                          - value: 1100
+                            color: '#ff9e07'
+                          - value: 0
+                            color: '#3ab54a'
+                  - type: grid
+                    columns: 1
+                    cards:
+                      - type: custom:mini-graph-card
+                        name: PPM
+                        font_size: 80
+                        font_size_header: 10
+                        points_per_hour: 4
+                        entities:
+                          - entity: sensor.particulate_matter_2_5um_concentration
+                        hours_to_show: 24
+                        hour24: true
+                        decimals: 0
+                        show:
+                          icon: false
+                          name: true
+                        color_thresholds:
+                          - value: 90
+                            color: '#fe0000'
+                          - value: 30
+                            color: '#ff9e07'
+                          - value: 0
+                            color: '#3ab54a'
+              - type: custom:button-card
+                entity: media_player.living_room_tv
+                tap_action:
+                  action: toggle
+                hold_action:
+                  action: fire-dom-event
+                  browser_mod:
+                    command: popup
+                    style:
+                      border-radius: 10px
+                      '--ha-card-border-radius': 0px
+                    title: TV
+                    card:
+                      type: custom:lg-remote-control
+                      entity: media_player.living_room_tv
+                      dimensions:
+                        scale: 0.85
+                      colors:
+                        active-background-button-color: '#0080ff'
+                        deactive-background-button-color: '#f2f0fa'
+                        button-border-standard: rgba(0, 128, 255, .5)
+                        state-icon-active-color: '#0080ff'
+                        buttons: '#666'
+                        background: '#333'
+                aspect_ratio: 1/1
+                show_state: true
+                styles:
+                  card:
+                    - font-size: 13px
+                    - padding-right: 5px
+                  icon:
+                    - color: var(--text-color)
+                    - width: 25px
+                    - align-items: start
+                    - justify-content: start
+                    - margin-left: 0px
+                    - margin-top: '-30px'
+                  grid:
+                    - grid-template-areas: '"i l l" "n n n" "s s s"'
+                    - grid-template-columns: 0.4fr 0.2fr 0.3fr
+                    - grid-template-rows: 1fr min-content min-content
+                  img_cell:
+                    - align-self: start
+                    - text-align: start
+                  name:
+                    - justify-self: start
+                    - padding: 0 10px 5px 10px
+                  state:
+                    - justify-self: start
+                    - padding-left: 10px
+                    - padding-bottom: 5px
+                    - font-size: 15px
+                state:
+                  - value: 'on'
+                    styles:
+                      card:
+                        - background-color: var(--accent-color)
+                  - value: 'off'
+                    styles:
+                      state:
+                        - color: var(--disabled-text-color)
+              - type: custom:button-card
+                entity: light.elutuba_akna_lambid_177
+                template:
+                  - base
+                  - show_brightness
+              - type: custom:slider-button-card
+                entity: light.elutoa_porandalamp
+                style: |
+                  .name {
+                    font-size: 13px;
+                  }
+                slider:
+                  direction: left-right
+                  background: solid
+                icon:
+                  use_state_color: false
+                  tap_action:
+                    action: toggle
+                  hold_action:
+                    action: more-info
+                action_button:
+                  mode: custom
+                  tap_action:
+                    action: toggle
+                  hold_action:
+                    action: more-info
+              - type: custom:button-card
+                entity: cover.elutuba_kardin_et_157
+                template: base
+              - type: custom:button-card
+                entity: light.elutuba_soogilaud_107
+                template:
+                  - base
+              - type: custom:button-card
+                entity: light.elutuba_diivanilaud_106
+                template:
+                  - base
+              - type: custom:button-card
+                entity: light.elutuba_koridorilambid_111
+                template:
+                  - base
+                  - show_brightness
+              - type: custom:button-card
+                entity: light.kook_laelambid_k_75
+                template:
+                  - base
+              - type: custom:button-card
+                entity: light.kook_toopind_714
+                template:
+                  - base
+            columns: 6
+          - type: custom:gap-card
+            height: 10
+          - type: custom:html-card
+            content: Lobby
+            style: |
+              .type-custom-html-card {
+                font-size: 30px;
+                font-weight: 300;
+                background: none;
+                box-shadow: none;
+                border: none;
+              }
+          - type: grid
+            cards:
+              - type: custom:mini-graph-card
+                font_size: 90
+                points_per_hour: 4
+                font_size_header: 10
+                entities:
+                  - entity: sensor.esik_temperatuur_e_153
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                  name: false
+                color_thresholds:
+                  - value: 25.5
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 24.5
+                    color: '#3ab54a'
+                  - value: 24
+                    color: '#05f7f9'
+                  - value: 23.5
+                    color: '#00ccff'
+                  - value: 23
+                    color: '#017eff'
+              - type: custom:button-card
+                entity: binary_sensor.esik_liikumisandur_e_152
+                name: Motion
+                template: motion
+              - type: custom:button-card
+                entity: binary_sensor.esik_valisuks_781
+                name: Front door
+                template: door
+              - type: custom:button-card
+                entity: light.esik_laelambid_e_172
+                template:
+                  - base
+              - type: custom:button-card
+                entity: lock.esik_valisukse_lukk_795
+                template: base
+            columns: 6
+          - type: custom:gap-card
+            height: 10
+          - type: horizontal-stack
+            cards:
+              - type: vertical-stack
+                cards:
+                  - type: custom:html-card
+                    content: WC
+                    style: |
+                      .type-custom-html-card {
+                        font-size: 30px;
+                        font-weight: 300;
+                        background: none;
+                        box-shadow: none;
+                        border: none;
+                      }
+                  - type: grid
+                    cards:
+                      - type: custom:mini-graph-card
+                        font_size: 90
+                        points_per_hour: 4
+                        font_size_header: 10
+                        entities:
+                          - entity: sensor.vaike_wc_temperatuur_w_137
+                        hours_to_show: 24
+                        hour24: true
+                        decimals: 1
+                        show:
+                          icon: false
+                          name: false
+                        color_thresholds:
+                          - value: 25.5
+                            color: '#fe0000'
+                          - value: 25
+                            color: '#ff9e07'
+                          - value: 24.5
+                            color: '#3ab54a'
+                          - value: 24
+                            color: '#05f7f9'
+                          - value: 23.5
+                            color: '#00ccff'
+                          - value: 23
+                            color: '#017eff'
+                      - type: custom:button-card
+                        entity: light.vaike_wc_laelambid_w_230
+                        template:
+                          - base
+                    columns: 2
+              - type: custom:gap-card
+              - type: vertical-stack
+                cards:
+                  - type: custom:html-card
+                    content: AC
+                    style: |
+                      .type-custom-html-card {
+                        font-size: 30px;
+                        font-weight: 300;
+                        background: none;
+                        box-shadow: none;
+                        border: none;
+                      }
+                  - type: custom:swipe-card
+                    parameters: null
+                    spaceBetween: 20
+                    scrollbar:
+                      hide: false
+                      draggable: true
+                      snapOnRelease: true
+                    cards:
+                      - type: grid
+                        columns: 2
+                        cards:
+                          - type: custom:button-card
+                            entity: switch.ac
+                            template:
+                              - base
+                          - type: custom:button-card
+                            entity: switch.ac_eco
+                            template:
+                              - base
+                      - type: custom:simple-thermostat
+                        entity: climate.midea_ac_145135534867682
+                        layout:
+                          step: row
+                          mode:
+                            names: true
+                            icons: true
+                            headings: false
+                        header: false
+                        hide:
+                          temperature: true
+                          state: true
+                        step_size: 1
+                        decimals: 0
+                        style: |
+                          ha-card {
+                            --st-font-size-xl: 60px;
+                            --st-font-size-m: 10px;
+                            --st-spacing: 4px;
+                          }
+  - title: bedrooms
+    path: bedrooms
+    style: |
+      :host {
+        padding: 0 20px;
+      }
+    type: custom:grid-layout
+    badges: []
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:gap-card
+            height: 10
+          - type: custom:html-card
+            content: Master
+            style: |
+              .type-custom-html-card {
+                font-size: 30px;
+                font-weight: 300;
+                background: none;
+                box-shadow: none;
+                border: none;
+              }
+          - type: grid
+            cards:
+              - type: custom:mini-graph-card
+                font_size: 90
+                points_per_hour: 4
+                font_size_header: 10
+                entities:
+                  - entity: sensor.master_magamistuba_temperatuur_vt_632
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                  name: false
+                color_thresholds:
+                  - value: 25.5
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 24.5
+                    color: '#3ab54a'
+                  - value: 24
+                    color: '#05f7f9'
+                  - value: 23.5
+                    color: '#00ccff'
+                  - value: 23
+                    color: '#017eff'
+              - type: custom:button-card
+                entity: binary_sensor.master_magamistuba_liikumisandur_vt_603
+                name: Liikumine
+                template:
+                  - motion
+              - type: custom:button-card
+                entity: light.master_magamistuba_laelamp_vt_182
+                template:
+                  - base
+              - type: custom:button-card
+                entity: light.master_magamistuba_voodi_lamp_vasak_144
+                template:
+                  - base
+              - type: custom:button-card
+                entity: light.master_magamistuba_voodi_lamp_parem_149
+                template:
+                  - base
+              - type: custom:button-card
+                entity: cover.master_magamistuba_kardin_vt_167
+                template: base
+            columns: 6
+          - type: custom:gap-card
+            height: 20
+          - type: custom:html-card
+            content: Kids room
+            style: |
+              .type-custom-html-card {
+                font-size: 30px;
+                font-weight: 300;
+                background: none;
+                box-shadow: none;
+                border: none;
+              }
+          - type: grid
+            cards:
+              - type: custom:mini-graph-card
+                points_per_hour: 4
+                font_size: 90
+                font_size_header: 10
+                entities:
+                  - entity: sensor.johani_tuba_temperatuur_j_447
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                  name: false
+                color_thresholds:
+                  - value: 25.5
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 24.5
+                    color: '#3ab54a'
+                  - value: 24
+                    color: '#05f7f9'
+                  - value: 23.5
+                    color: '#00ccff'
+                  - value: 23
+                    color: '#017eff'
+              - type: custom:button-card
+                entity: binary_sensor.johani_tuba_liikumisandur_j_445
+                name: Motion
+                template: motion
+              - type: custom:button-card
+                entity: light.johani_tuba_laelamp_719
+                template:
+                  - base
+              - type: custom:slider-button-card
+                entity: light.johani_tuba_voodi_valgustus_285
+                style: |
+                  .name {
+                    font-size: 13px;
+                  }
+                slider:
+                  direction: left-right
+                  background: solid
+                icon:
+                  use_state_color: false
+                  tap_action:
+                    action: toggle
+                  hold_action:
+                    action: more-info
+                action_button:
+                  mode: custom
+                  tap_action:
+                    action: toggle
+                  hold_action:
+                    action: more-info
+            columns: 6
+          - type: custom:gap-card
+            height: 20
+          - type: custom:html-card
+            content: Kids room 2
+            style: |
+              .type-custom-html-card {
+                font-size: 30px;
+                font-weight: 300;
+                background: none;
+                box-shadow: none;
+                border: none;
+              }
+          - type: grid
+            cards:
+              - type: custom:mini-graph-card
+                points_per_hour: 4
+                font_size: 90
+                font_size_header: 10
+                entities:
+                  - entity: sensor.marta_tuba_temperatuur_m_630
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                  name: false
+                color_thresholds:
+                  - value: 25.5
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 24.5
+                    color: '#3ab54a'
+                  - value: 24
+                    color: '#05f7f9'
+                  - value: 23.5
+                    color: '#00ccff'
+                  - value: 23
+                    color: '#017eff'
+              - type: custom:button-card
+                entity: binary_sensor.marta_tuba_liikumisandur_m_604
+                name: Motion
+                template: motion
+              - type: custom:button-card
+                entity: light.marta_tuba_laelamp_m_544
+                template:
+                  - base
+              - type: custom:slider-button-card
+                entity: light.ohupall
+                style: |
+                  .name {
+                    font-size: 13px;
+                  }
+                slider:
+                  direction: left-right
+                  background: solid
+                icon:
+                  use_state_color: false
+                  tap_action:
+                    action: toggle
+                  hold_action:
+                    action: more-info
+                action_button:
+                  mode: custom
+                  tap_action:
+                    action: toggle
+                  hold_action:
+                    action: more-info
+            columns: 6
+  - title: Pesuruumid
+    path: pesuruumid
+    icon: ''
+    theme: ''
+    type: custom:grid-layout
+    badges: []
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:gap-card
+            height: 10
+          - type: custom:html-card
+            content: Lounge
+            style: |
+              .type-custom-html-card {
+                font-size: 30px;
+                font-weight: 300;
+                background: none;
+                box-shadow: none;
+                border: none;
+              }
+          - type: grid
+            cards:
+              - type: custom:mini-graph-card
+                points_per_hour: 4
+                font_size: 90
+                font_size_header: 10
+                entities:
+                  - entity: sensor.puhkeruum_temperatuur_p_446
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                  name: false
+                color_thresholds:
+                  - value: 25.5
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 24.5
+                    color: '#3ab54a'
+                  - value: 24
+                    color: '#05f7f9'
+                  - value: 23.5
+                    color: '#00ccff'
+                  - value: 23
+                    color: '#017eff'
+              - type: custom:button-card
+                entity: binary_sensor.puhkeruum_liikumisandur_p_444
+                name: Motion
+                template: motion
+              - type: custom:button-card
+                entity: light.puhkeruum_laelambid_p_83
+                template:
+                  - base
+              - type: conditional
+                conditions:
+                  - entity: light.puhkeruum_laelambid_p_83
+                    state: 'on'
+                card:
+                  type: custom:slider-button-card
+                  entity: light.eesruum_laelambid_dimmable
+                  style: |
+                    .name {
+                      font-size: 13px;
+                    }
+                  name: Äärmised pirnid
+                  slider:
+                    direction: left-right
+                    background: solid
+                  icon:
+                    use_state_color: false
+                    tap_action:
+                      action: toggle
+                    hold_action:
+                      action: more-info
+                  action_button:
+                    mode: custom
+                    tap_action:
+                      action: toggle
+                    hold_action:
+                      action: more-info
+              - type: custom:button-card
+                entity: light.puhkeruum_seinalamp_704
+                template:
+                  - base
+              - type: custom:slider-button-card
+                entity: light.puhkeruumi_porandalamp
+                style: |
+                  .name {
+                    font-size: 13px;
+                  }
+                slider:
+                  direction: left-right
+                  background: solid
+                icon:
+                  use_state_color: false
+                  tap_action:
+                    action: toggle
+                  hold_action:
+                    action: more-info
+                action_button:
+                  mode: custom
+                  tap_action:
+                    action: toggle
+                  hold_action:
+                    action: more-info
+              - type: custom:button-card
+                entity: switch.chimneystate
+                name: Fireplace mode
+                template:
+                  - base
+            columns: 6
+          - type: custom:gap-card
+            height: 10
+          - type: custom:html-card
+            content: Bathroom
+            style: |
+              .type-custom-html-card {
+                font-size: 30px;
+                font-weight: 300;
+                background: none;
+                box-shadow: none;
+                border: none;
+              }
+          - type: grid
+            cards:
+              - type: custom:mini-graph-card
+                points_per_hour: 4
+                font_size: 90
+                font_size_header: 10
+                entities:
+                  - entity: sensor.vannituba_temperatuur_v_519
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                  name: false
+                color_thresholds:
+                  - value: 25.5
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 24.5
+                    color: '#3ab54a'
+                  - value: 24
+                    color: '#05f7f9'
+                  - value: 23.5
+                    color: '#00ccff'
+                  - value: 23
+                    color: '#017eff'
+              - type: custom:mini-graph-card
+                points_per_hour: 4
+                font_size: 80
+                font_size_header: 10
+                entities:
+                  - entity: sensor.vannituba_ohuniiskus_v_521
+                hours_to_show: 24
+                hour24: true
+                decimals: 0
+                show:
+                  icon: false
+                  name: true
+                color_thresholds:
+                  - value: 70
+                    color: '#fe0000'
+                  - value: 60
+                    color: '#ff9e07'
+                  - value: 30
+                    color: '#3ab54a'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 15
+                    color: '#fe0000'
+              - type: custom:button-card
+                entity: binary_sensor.vannituba_liikumisandur_v_518
+                name: Motion
+                template: motion
+              - type: custom:button-card
+                entity: light.vannituba_laelambid_v_192
+                template:
+                  - base
+              - type: custom:slider-button-card
+                entity: light.vannituba_led_lagi_peegel_v_130
+                style: |
+                  .name {
+                    font-size: 13px;
+                  }
+                slider:
+                  direction: left-right
+                  background: solid
+                icon:
+                  use_state_color: false
+                  tap_action:
+                    action: toggle
+                  hold_action:
+                    action: more-info
+                  icon: ''
+                action_button:
+                  mode: custom
+                  tap_action:
+                    action: toggle
+                  hold_action:
+                    action: more-info
+              - type: custom:button-card
+                entity: switch.vannituba_tsirkulatsioon_779
+                name: Tsirkulatsioon
+                template:
+                  - base
+            columns: 6
+          - type: custom:gap-card
+            height: 10
+          - type: custom:html-card
+            content: Sauna
+            style: |
+              .type-custom-html-card {
+                font-size: 30px;
+                font-weight: 300;
+                background: none;
+                box-shadow: none;
+                border: none;
+              }
+          - type: grid
+            cards:
+              - type: custom:mini-graph-card
+                points_per_hour: 4
+                font_size: 90
+                font_size_header: 10
+                entities:
+                  - entity: sensor.saun_temperatuur_s_528
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                  name: false
+                color_thresholds:
+                  - value: 25.5
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 24.5
+                    color: '#3ab54a'
+                  - value: 24
+                    color: '#05f7f9'
+                  - value: 23.5
+                    color: '#00ccff'
+                  - value: 23
+                    color: '#017eff'
+              - type: custom:button-card
+                entity: light.saun_keris_607
+                template:
+                  - base
+              - type: custom:slider-button-card
+                entity: light.saun_ulemine_led_533
+                style: |
+                  .name {
+                    font-size: 13px;
+                  }
+                slider:
+                  direction: left-right
+                  background: solid
+                icon:
+                  use_state_color: false
+                  tap_action:
+                    action: toggle
+                  hold_action:
+                    action: more-info
+                  icon: ''
+                action_button:
+                  mode: custom
+                  tap_action:
+                    action: toggle
+                  hold_action:
+                    action: more-info
+              - type: custom:slider-button-card
+                entity: light.saun_alumine_led_532
+                style: |
+                  .name {
+                    font-size: 13px;
+                  }
+                slider:
+                  direction: left-right
+                  background: solid
+                icon:
+                  use_state_color: false
+                  tap_action:
+                    action: toggle
+                  hold_action:
+                    action: more-info
+                  icon: ''
+                action_button:
+                  mode: custom
+                  tap_action:
+                    action: toggle
+                  hold_action:
+                    action: more-info
+              - type: custom:button-card
+                entity: light.saun_koristusvalgus_91
+                template:
+                  - base
+            columns: 6
+  - title: Tehnilised ja õu
+    path: tehnilised-ja-u
+    icon: ''
+    theme: ''
+    type: custom:grid-layout
+    badges: []
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:gap-card
+            height: 10
+          - type: custom:html-card
+            content: Outside
+            style: |
+              .type-custom-html-card {
+                font-size: 30px;
+                font-weight: 300;
+                background: none;
+                box-shadow: none;
+                border: none;
+              }
+          - type: grid
+            cards:
+              - type: custom:mini-graph-card
+                points_per_hour: 4
+                font_size: 90
+                font_size_header: 10
+                entities:
+                  - entity: sensor.ou_valistemperatuur_771
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                  name: false
+                color_thresholds:
+                  - value: 30
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 20
+                    color: '#3ab54a'
+                  - value: 15
+                    color: '#05f7f9'
+                  - value: 10
+                    color: '#00ccff'
+                  - value: -1
+                    color: '#017eff'
+                  - value: -10
+                    color: '#7030a2'
+              - type: custom:mini-graph-card
+                points_per_hour: 4
+                font_size: 80
+                font_size_header: 10
+                entities:
+                  - entity: sensor.ou_valisohuniiskus_773
+                hours_to_show: 24
+                hour24: true
+                decimals: 0
+                show:
+                  icon: false
+                  name: true
+              - type: custom:mini-graph-card
+                points_per_hour: 4
+                font_size: 80
+                font_size_header: 10
+                entities:
+                  - entity: sensor.ou_valisvalgustugevus_772
+                hours_to_show: 24
+                hour24: true
+                decimals: 0
+                show:
+                  icon: false
+                  name: true
+              - type: custom:button-card
+                entity: binary_sensor.ou_valisliikumisandur_770
+                name: Liikumine
+                template: motion
+              - type: custom:button-card
+                entity: light.ou_fassaadivalgus_754
+                template:
+                  - base
+                  - show_brightness
+              - type: custom:button-card
+                entity: light.ou_valguskett_749
+                template:
+                  - base
+                  - show_brightness
+                action_button:
+                  mode: toggle
+              - type: custom:button-card
+                entity: light.aia_valgustid
+                template:
+                  - base
+              - type: custom:button-card
+                entity: light.ou_terrassivalgus_86
+                template:
+                  - base
+              - type: custom:button-card
+                entity: switch.rf_plug_1
+                name: Jõuluvalgus
+                icon: mdi:string-lights
+                template:
+                  - base
+              - type: custom:button-card
+                entity: switch.rf_plug_2
+                name: Jõulukuusk
+                icon: mdi:string-lights
+                template:
+                  - base
+              - type: conditional
+                conditions:
+                  - entity: input_boolean.you_got_mail
+                    state: 'on'
+                card:
+                  type: custom:button-card
+                  entity: input_boolean.you_got_mail
+                  template:
+                    - input_boolean
+            columns: 6
+          - type: custom:gap-card
+            height: 10
+          - type: custom:html-card
+            content: Garage
+            style: |
+              .type-custom-html-card {
+                font-size: 30px;
+                font-weight: 300;
+                background: none;
+                box-shadow: none;
+                border: none;
+              }
+          - type: grid
+            cards:
+              - type: custom:mini-graph-card
+                points_per_hour: 4
+                font_size: 90
+                font_size_header: 10
+                entities:
+                  - entity: sensor.garaaz_temperatuur_g_121
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                  name: false
+                color_thresholds:
+                  - value: 25.5
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 24.5
+                    color: '#3ab54a'
+                  - value: 24
+                    color: '#05f7f9'
+                  - value: 23.5
+                    color: '#00ccff'
+                  - value: 23
+                    color: '#017eff'
+              - type: custom:button-card
+                entity: binary_sensor.garaaz_liikumisandur_g_120
+                name: Motion
+                template: motion
+              - type: custom:button-card
+                entity: binary_sensor.garaaz_garaaziuks_628
+                template: door
+              - type: custom:button-card
+                entity: light.garaaz_laelambid_767
+                template:
+                  - base
+              - type: custom:button-card
+                entity: lock.garaaziuks
+                template: garage_lock
+            columns: 6
+          - type: custom:gap-card
+            height: 10
+          - type: custom:html-card
+            content: Technical
+            style: |
+              .type-custom-html-card {
+                font-size: 30px;
+                font-weight: 300;
+                background: none;
+                box-shadow: none;
+                border: none;
+              }
+          - type: grid
+            cards:
+              - type: custom:mini-graph-card
+                points_per_hour: 4
+                font_size: 90
+                font_size_header: 10
+                entities:
+                  - entity: sensor.tehnoruum_temperatuur_t_100
+                hours_to_show: 24
+                hour24: true
+                decimals: 1
+                show:
+                  icon: false
+                  name: false
+                color_thresholds:
+                  - value: 25.5
+                    color: '#fe0000'
+                  - value: 25
+                    color: '#ff9e07'
+                  - value: 24.5
+                    color: '#3ab54a'
+                  - value: 24
+                    color: '#05f7f9'
+                  - value: 23.5
+                    color: '#00ccff'
+                  - value: 23
+                    color: '#017eff'
+              - type: custom:button-card
+                entity: binary_sensor.tehnoruum_liikumisandur_t_99
+                name: Motion
+                template: motion
+              - type: custom:button-card
+                entity: binary_sensor.tehnoruum_tehnoruumi_uks_782
+                template: door
+              - type: custom:button-card
+                entity: switch.ohksoojuspump_eco
+                template: base
+              - type: custom:button-card
+                entity: light.tehnoruum_laelambid_t_682
+                template:
+                  - base
+              - type: custom:button-card
+                entity: switch.komfovent_switch_power
+                icon: mdi:fan
+                name: Ventilation
+                template:
+                  - base
+                tap_action:
+                  action: fire-dom-event
+                  browser_mod:
+                    command: popup
+                    style:
+                      border-radius: 10px
+                      '--ha-card-border-radius': 0px
+                    title: Ventilation
+                    card:
+                      type: custom:vertical-stack-in-card
+                      style: |
+                        ha-card {
+                          padding: 20px;
+                        }
+                      cards:
+                        - type: entities
+                          entities:
+                            - input_number.komfovent_set_fan
+                        - type: horizontal-stack
+                          cards:
+                            - type: custom:button-card
+                              entity: light.ventilation_vent_intens_or_608
+                              layout: icon_name
+                              name: Intensive
+                            - type: custom:button-card
+                              entity: switch.chimneystate
+                              layout: icon_name
+                              name: Fireplace
+                        - type: horizontal-stack
+                          cards:
+                            - type: custom:button-card
+                              entity: input_boolean.inhalator_mode
+                              layout: icon_name
+                              name: Inhalator
+                            - type: custom:gap-card
+                        - type: custom:gap-card
+                          height: 20
+                        - type: horizontal-stack
+                          cards:
+                            - type: custom:button-card
+                              entity: sensor.komfovent_mode
+                              tap_action:
+                                action: call-service
+                                service: modbus.write_register
+                                service_data:
+                                  address: 4
+                                  hub: Komfovent
+                                  unit: 1
+                                  value: 1
+                              hold_action:
+                                action: none
+                              name: Away
+                              show_name: true
+                              icon: mdi:home-export-outline
+                              state:
+                                - value: '1'
+                                  color: '#03a9f4'
+                            - type: custom:button-card
+                              entity: sensor.komfovent_mode
+                              tap_action:
+                                action: call-service
+                                service: modbus.write_register
+                                service_data:
+                                  address: 4
+                                  hub: Komfovent
+                                  unit: 1
+                                  value: 2
+                              hold_action:
+                                action: none
+                              name: Home
+                              show_name: true
+                              icon: mdi:home-account
+                              state:
+                                - value: '2'
+                                  color: '#03a9f4'
+                            - type: custom:button-card
+                              entity: sensor.komfovent_mode
+                              tap_action:
+                                action: call-service
+                                service: modbus.write_register
+                                service_data:
+                                  address: 4
+                                  hub: Komfovent
+                                  unit: 1
+                                  value: 3
+                              hold_action:
+                                action: none
+                              name: Guests
+                              show_name: true
+                              icon: mdi:weather-windy
+                              state:
+                                - value: '3'
+                                  color: '#03a9f4'
+                            - type: custom:button-card
+                              entity: sensor.komfovent_mode
+                              tap_action:
+                                action: call-service
+                                service: modbus.write_register
+                                service_data:
+                                  address: 4
+                                  hub: Komfovent
+                                  unit: 1
+                                  value: 4
+                              hold_action:
+                                action: none
+                              name: Kitchen
+                              show_name: true
+                              icon: mdi:pot-steam
+                              state:
+                                - value: '4'
+                                  color: '#03a9f4'
+                        - type: custom:gap-card
+                          height: 10
+                        - type: horizontal-stack
+                          cards:
+                            - type: sensor
+                              entity: sensor.komfovent_status_panel_temperature
+                              name: Temperature
+                              icon: mdi:home-import-outline
+                              tap_action:
+                                action: none
+                              hold_action: more-info
+                            - type: sensor
+                              entity: sensor.komfovent_status_panel_humidity
+                              name: Humidity
+                              icon: mdi:water-percent
+                              tap_action:
+                                action: none
+                              hold_action: more-info
+                            - type: sensor
+                              entity: sensor.komfovent_outdoor_temperature_c
+                              name: Outside
+                              icon: mdi:home-export-outline
+                              tap_action:
+                                action: none
+                              hold_action: more-info
+                        - type: custom:gap-card
+                          height: 10
+                        - type: horizontal-stack
+                          cards:
+                            - type: custom:bar-card
+                              entities:
+                                - entity: sensor.komfovent_supply_fan_intensivity
+                              positions:
+                                icon: 'off'
+                                indicator: 'off'
+                              entity_row: true
+                              name: In
+                              severity:
+                                - color: Red
+                                  from: 70
+                                  to: 100
+                                - color: Orange
+                                  from: 40
+                                  to: 69
+                              style: |-
+                                bar-card-value {
+                                  margin: 0 10px;
+                                }
+                                bar-card-name {
+                                  margin: 0 10px;
+                                }
+                                ha-card {
+                                  margin: 0 10px;
+                                }
+                                bar-card-currentbar, bar-card-backgroundbar {
+                                  border-radius: 7px;
+                                }
+                            - type: custom:bar-card
+                              entities:
+                                - entity: sensor.komfovent_extract_fan_intensivity
+                              positions:
+                                icon: 'off'
+                                indicator: 'off'
+                              entity_row: true
+                              name: Out
+                              severity:
+                                - color: Red
+                                  from: 70
+                                  to: 100
+                                - color: Orange
+                                  from: 40
+                                  to: 69
+                              style: |-
+                                bar-card-value {
+                                  margin: 0 10px;
+                                }
+                                bar-card-name {
+                                  margin: 0 10px;
+                                }
+                                ha-card {
+                                  margin: 0 10px;
+                                }
+                                bar-card-currentbar, bar-card-backgroundbar {
+                                  border-radius: 7px;
+                                }
+                            - type: custom:bar-card
+                              entities:
+                                - entity: sensor.komfovent_filter_impurity
+                              positions:
+                                icon: 'off'
+                                indicator: 'off'
+                              entity_row: true
+                              name: Filter
+                              severity:
+                                - color: Red
+                                  from: 95
+                                  to: 100
+                                - color: Orange
+                                  from: 90
+                                  to: 94
+                              style: |-
+                                bar-card-value {
+                                  margin: 0 10px;
+                                }
+                                bar-card-name {
+                                  margin: 0 10px;
+                                }
+                                ha-card {
+                                  margin: 0 10px;
+                                }
+                                bar-card-currentbar, bar-card-backgroundbar {
+                                  border-radius: 7px;
+                                }
+                        - type: custom:gap-card
+                          height: 15
+                        - type: horizontal-stack
+                          cards:
+                            - type: sensor
+                              entity: sensor.komfovent_power_consumption_w
+                              name: Power
+                              icon: mdi:power-plug
+                              tap-action:
+                                action: none
+                              hold-action: more-info
+                            - type: sensor
+                              entity: sensor.komfovent_heat_recovery_w
+                              name: Recovery
+                              icon: mdi:atom-variant
+                              tap-action:
+                                action: none
+                              hold-action: more-info
+                            - type: button
+                              entity: switch.komfovent_switch_power
+                              name: On / Off
+                              icon: mdi:power
+                              hold_action: more-info
+            columns: 6
+  - title: Nordpool
+    path: nordpool
+    type: custom:grid-layout
+    layout: null
+    grid-template-columns: 70% 30%
+    grid-template-rows: auto
+    grid-template-areas: |
+      "main sidebar"
+    badges: []
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:gap-card
+            height: 15
+          - square: true
+            columns: 6
+            type: grid
+            cards:
+              - type: gauge
+                entity: sensor.nordpool_kwh_ee_eur_3_095_02
+                needle: true
+                name: Now
+                min: 0
+                max: 1
+                severity:
+                  green: 0
+                  yellow: 0.1
+                  red: 0.2
+                unit: €
+                theme: noctis
+              - type: custom:bignumber-card
+                entity: sensor.nordpool_kwh_ee_eur_3_095_02
+                attribute: min
+                title: Min, €
+                scale: 39px
+                round: 2
+                hideunit: true
+                card_mod:
+                  style: |
+                    #value {
+                      font-size: 40px !important;
+                    }
+                    #title {
+                      font-size: 14px !important;
+                    }
+              - type: custom:bignumber-card
+                entity: sensor.nordpool_kwh_ee_eur_3_095_02
+                attribute: average
+                title: Avg. €
+                scale: 39px
+                round: 2
+                hideunit: true
+                card_mod:
+                  style: |
+                    #value {
+                      font-size: 40px !important;
+                    }
+                    #title {
+                      font-size: 14px !important;
+                    }
+              - type: custom:bignumber-card
+                entity: sensor.nordpool_kwh_ee_eur_3_095_02
+                attribute: max
+                title: Max, €
+                scale: 39px
+                round: 2
+                hideunit: true
+                card_mod:
+                  style: |
+                    #value {
+                      font-size: 40px !important;
+                    }
+                    #title {
+                      font-size: 14px !important;
+                    }
+              - type: custom:bignumber-card
+                entity: sensor.cheapest_3_hours_in
+                title: Taimer
+                scale: 38px
+                card_mod:
+                  style: |
+                    #value {
+                      font-size: 40px !important;
+                    }
+                    #title {
+                      font-size: 14px !important;
+                    }
+              - type: gauge
+                name: Current W
+                entity: sensor.currentpower
+                needle: true
+                min: 0
+                severity:
+                  green: 0
+                  yellow: 200
+                  red: 400
+                max: 1000
+                unit: W
+                theme: noctis
+          - type: custom:apexcharts-card
+            view_layout:
+              grid-area: main
+            graph_span: 48h
+            span:
+              start: day
+              offset: +0H
+            header:
+              title: NordPool elektrihinnad
+              show: false
+              show_states: false
+              colorize_states: true
+            hours_12: false
+            stacked: false
+            experimental:
+              color_threshold: true
+            all_series_config:
+              show:
+                legend_value: false
+                datalabels: false
+                extremas: true
+                in_brush: true
+              type: area
+              invert: false
+              fill_raw: last
+            yaxis:
+              - id: first
+                min: 0
+                decimals: 2
+              - id: second
+                min: 0
+                opposite: true
+                decimals: 0
+            now:
+              show: true
+              label: Praegu
+              color: red
+            series:
+              - entity: sensor.currentpower
+                yaxis_id: second
+                type: line
+                stroke_width: 2
+                float_precision: 0
+                curve: smooth
+                extend_to: false
+                unit: W
+                show:
+                  extremas: false
+                group_by:
+                  func: avg
+                  duration: 1h
+                color_threshold:
+                  - value: -1
+                    color: '#1E90FF'
+                  - value: 30
+                    color: '#008000'
+                  - value: 200
+                    color: '#DAA520'
+                  - value: 400
+                    color: '#FF0000'
+              - entity: sensor.nordpool_kwh_ee_eur_3_095_02
+                yaxis_id: first
+                name: Täna
+                opacity: 0.7
+                extend_to: false
+                float_precision: 2
+                color_threshold:
+                  - value: -1
+                    color: '#1E90FF'
+                  - value: 0.1
+                    color: '#008000'
+                  - value: 0.2
+                    color: '#DAA520'
+                  - value: 0.3
+                    color: '#FF0000'
+                data_generator: |
+                  return entity.attributes.raw_today.map((start, index) => {
+                    return [new Date(start["start"]).getTime(), entity.attributes.raw_today[index]["value"]];
+                  });
+              - entity: sensor.nordpool_kwh_ee_eur_3_095_02
+                yaxis_id: first
+                color: '#3498db'
+                name: Homme
+                opacity: 0.5
+                float_precision: 2
+                color_threshold:
+                  - value: -1
+                    color: '#1E90FF'
+                  - value: 0.1
+                    color: '#008000'
+                  - value: 0.2
+                    color: '#DAA520'
+                  - value: 0.3
+                    color: '#FF0000'
+                data_generator: |
+                  return entity.attributes.raw_tomorrow.map((start, index) => {
+
+                    return [new Date(start["start"]).getTime(), entity.attributes.raw_tomorrow[index]["value"]];
+
+                  });
+            apex_config:
+              chart:
+                height: 420px
+                animations:
+                  enabled: true
+                  easing: easeinout
+                  speed: 800
+                  animateGradually:
+                    enabled: true
+                    delay: 150
+              zoom:
+                enabled: true
+                type: x
+                autoScaleYaxis: true
+                zoomedArea:
+                  fill:
+                    color: '#90CAF9'
+                    opacity: 0.4
+                  stroke:
+                    color: '#0D47A1'
+                    opacity: 0.4
+                    width: 1
+              legend:
+                show: false
+                floating: true
+                offsetY: 25
+              xaxis:
+                labels:
+                  show: true
+                  rotate: -45
+                  rotateAlways: true
+                logarithmic: true
+              stroke:
+                show: true
+                curve: stepline
+                lineCap: butt
+                colors: undefined
+              plotOptions:
+                candlestick:
+                  colors:
+                    upward: '#00B746'
+                    downward: '#EF403C'
+                  wick:
+                    useFillColor: true
+              markers:
+                size: 1
+              grid:
+                show: true
+                borderColor: '#7b8aa8'
+                strokeDashArray: 1
+                position: front
+                xaxis:
+                  lines:
+                    show: true
+  - theme: Backend-selected
+    title: Landroid
+    path: landroid
+    type: custom:grid-layout
+    badges: []
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:gap-card
+            height: 10
+          - type: custom:html-card
+            content: Landroid
+            style: |
+              .type-custom-html-card {
+                font-size: 30px;
+                font-weight: 300;
+                background: none;
+                box-shadow: none;
+                border: none;
+              }
+          - type: horizontal-stack
+            cards:
+              - square: true
+                columns: 3
+                type: grid
+                cards:
+                  - type: custom:button-card
+                    entity: vacuum.mower
+                    template: base
+                    icon: mdi:robot-mower
+                    tap_action:
+                      action: more-info
+                    show_state: true
+                    show_name: false
+                    styles:
+                      grid:
+                        - grid-template-areas: >-
+                            "i l l w" "s s s s" "custom_state custom_state
+                            custom_state custom_state"
+                      custom_fields:
+                        custom_state:
+                          - justify-self: start
+                    custom_fields:
+                      custom_state: >
+                        [[[
+                          var num = entity.attributes.rain_sensor.remaining;
+                          var hours = (num / 60);
+                          var rhours = Math.floor(hours);
+                          var minutes = (hours - rhours) * 60;
+                          var rminutes = Math.round(minutes);
+                        if(entity.attributes.error.description == "rain delay"
+                        && entity.attributes.rain_sensor.triggered === false) 
+                          if(rhours > 0)
+                              return rhours + "h " + rminutes + "min to go";
+                            else return rminutes + "min to go";
+                            else if(entity.attributes.error.description == "rain delay" && entity.attributes.rain_sensor.triggered === true)
+                            return "Sensor wet";
+                          else return entity.attributes.error.description;
+                        ]]]
+                    state:
+                      - value: error
+                        styles:
+                          card:
+                            - background-color: var(--alarm-color-armed)
+                      - value: mowing
+                        styles:
+                          card:
+                            - background-color: var(--label-badge-green)
+                  - type: custom:button-card
+                    entity: switch.mower_mowing
+                    template: base
+                  - type: custom:button-card
+                    entity: switch.mower_home
+                    template: base
+                  - type: custom:mini-graph-card
+                    name: Soil moisture
+                    font_size: 80
+                    font_size_header: 10
+                    entities:
+                      - entity: sensor.tehnoruum_vent_si_in1_428
+                    hour24: true
+                    decimals: 1
+                    hours_to_show: 48
+                    points_per_hour: 2
+                    show:
+                      icon: false
+                      name: true
+                    color_thresholds:
+                      - value: 30
+                        color: '#fe0000'
+                      - value: 27
+                        color: '#ff9e07'
+                      - value: 25
+                        color: '#3ab54a'
+                      - value: 20
+                        color: '#ff9e07'
+                      - value: 15
+                        color: '#fe0000'
+                      - value: 0
+                        color: '#05f7f9'
+                  - type: custom:button-card
+                    entity: switch.mower_edgecut
+                    template: base
+                  - type: custom:button-card
+                    entity: switch.mower_partymode
+                    template: base
+                  - type: custom:mini-graph-card
+                    style:
+                      .icon ha-icon:
+                        $: |
+                          ha-svg-icon {
+                            height: 15px;
+                          }
+                    font_size_header: 10
+                    font_size: 60
+                    name: Battery
+                    entities:
+                      - entity: sensor.mower_battery
+                    hours_to_show: 48
+                    points_per_hour: 4
+                    hour24: true
+                    decimals: 0
+                    align_icon: right
+                    color_thresholds:
+                      - value: 80
+                        color: '#3ab54a'
+                      - value: 50
+                        color: '#05f7f9'
+                      - value: 30
+                        color: '#ff9e07'
+                      - value: 15
+                        color: '#fe0000'
+                  - type: custom:mini-graph-card
+                    font_size_header: 10
+                    font_size: 70
+                    name: Battery temp.
+                    entities:
+                      - entity: sensor.mower_battery_temperature
+                    hours_to_show: 48
+                    points_per_hour: 4
+                    hour24: true
+                    decimals: 1
+                    align_icon: right
+                    color_thresholds:
+                      - value: 30
+                        color: '#fe0000'
+                      - value: 25
+                        color: '#ff9e07'
+                      - value: 20
+                        color: '#3ab54a'
+                      - value: 15
+                        color: '#05f7f9'
+                      - value: 10
+                        color: '#00ccff'
+                      - value: 5
+                        color: '#017eff'
+                      - value: 0
+                        color: '#7030a2'
+                      - value: -10
+                        color: '#980299'
+                      - value: -15
+                        color: '#cc0199'
+                    style:
+                      .icon ha-icon:
+                        $: |
+                          ha-svg-icon {
+                            height: 15px;
+                          }
+                  - type: custom:mini-graph-card
+                    font_size_header: 10
+                    font_size: 70
+                    name: Total distance
+                    entities:
+                      - entity: sensor.mower_distance
+                    hours_to_show: 48
+                    points_per_hour: 4
+                    hour24: true
+                    decimals: 0
+                    show:
+                      icon: false
+                    align_icon: right
+              - type: vertical-stack
+                cards:
+                  - image: default
+                    compact_view: false
+                    show_status: true
+                    show_name: true
+                    show_toolbar: true
+                    type: custom:landroid-card
+                    entity: vacuum.mower
+                    stats:
+                      default:
+                        - attribute: blades.total_on
+                          subtitle: Total blade time
+                          value_template: '{{ as_timedelta((value | float(0) * 60) | string) }}'
+                        - attribute: blades.current_on
+                          subtitle: Current blade time
+                          value_template: '{{ as_timedelta((value | float(0) * 60) | string) }}'
+                        - attribute: statistics.worktime_blades_on
+                          subtitle: Work time
+                          value_template: '{{ as_timedelta((value | float(0) * 60) | string) }}'
+                        - attribute: statistics.distance
+                          value_template: '{{ (value | float(0) / 1000) | round(3) }}'
+                          unit: km
+                          subtitle: Distance
+                      mowing:
+                        - attribute: orientation.yaw
+                          subtitle: Yaw
+                          unit: °
+                        - attribute: orientation.roll
+                          subtitle: Roll
+                          unit: °
+                        - attribute: orientation.pitch
+                          subtitle: Pitch
+                          unit: °
+                    shortcuts:
+                      - name: Notification
+                        service: automation.toggle
+                        icon: mdi:bell
+                        service_data:
+                          entity_id: automation.mower_notify_status
+  - theme: Backend-selected
+    title: Toarobot
+    path: tuuba
+    type: custom:grid-layout
+    badges: []
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:gap-card
+            height: 10
+          - type: custom:html-card
+            content: Pick rooms to clean
+            style: |
+              .type-custom-html-card {
+                font-size: 30px;
+                font-weight: 300;
+                background: none;
+                box-shadow: none;
+                border: none;
+              }
+          - type: horizontal-stack
+            cards:
+              - type: vertical-stack
+                cards:
+                  - type: grid
+                    columns: 3
+                    square: true
+                    cards:
+                      - type: custom:button-card
+                        template: vacuum_room
+                        entity: sensor.tuuba_queue_living_room
+                        icon: mdi:sofa-single
+                        name: Elutuba
+                        tap_action:
+                          service_data:
+                            room: living_room
+                      - type: custom:button-card
+                        template: vacuum_room
+                        entity: sensor.tuuba_queue_dining_room
+                        icon: fas:utensils
+                        name: Söögilaud
+                        tap_action:
+                          service_data:
+                            room: dining_room
+                      - type: custom:button-card
+                        template: vacuum_room
+                        entity: sensor.tuuba_queue_kitchen
+                        icon: mdi:pot-steam
+                        name: Köök
+                        tap_action:
+                          service_data:
+                            room: kitchen
+                      - type: custom:button-card
+                        template: vacuum_room
+                        entity: sensor.tuuba_queue_bathroom
+                        icon: fas:shower
+                        name: Vannituba
+                        tap_action:
+                          service_data:
+                            room: bathroom
+                      - type: custom:button-card
+                        template: vacuum_room
+                        entity: sensor.tuuba_queue_lounge
+                        icon: hue:room-lounge
+                        name: Puhkeruum
+                        tap_action:
+                          service_data:
+                            room: lounge
+                      - type: custom:button-card
+                        template: vacuum_room
+                        entity: sensor.tuuba_queue_corridor
+                        icon: hue:room-other
+                        name: Esik
+                        tap_action:
+                          service_data:
+                            room: corridor
+                      - type: custom:button-card
+                        template: vacuum_room
+                        entity: sensor.tuuba_queue_bedroom
+                        icon: fas:user-friends
+                        name: Vanemad
+                        tap_action:
+                          service_data:
+                            room: bedroom
+                      - type: custom:button-card
+                        template: vacuum_room
+                        entity: sensor.tuuba_queue_study
+                        icon: mdi:bunk-bed
+                        name: Johan ja Marta
+                        tap_action:
+                          service_data:
+                            room: study
+                      - type: custom:button-card
+                        template: vacuum_room
+                        entity: sensor.tuuba_queue_kids_room
+                        icon: fas:child
+                        name: Marie
+                        tap_action:
+                          service_data:
+                            room: kids_room
+                      - type: custom:button-card
+                        template: vacuum_room
+                        entity: sensor.tuuba_queue_storeroom
+                        icon: mdi:paper-roll
+                        name: WC
+                        tap_action:
+                          service_data:
+                            room: storeroom
+                      - type: custom:button-card
+                        template: vacuum_room
+                        entity: sensor.tuuba_queue_sunroom
+                        icon: fas:hot-tub
+                        name: Saun
+                        tap_action:
+                          service_data:
+                            room: sunroom
+                      - type: conditional
+                        conditions:
+                          - entity: vacuum.tuuba
+                            state_not: cleaning
+                          - entity: vacuum.tuuba
+                            state_not: paused
+                        card:
+                          type: custom:button-card
+                          template: vacuum_service
+                          icon: mdi:play
+                          name: Start
+                          styles:
+                            card:
+                              - background-color: var(--label-badge-green)
+                              - color: var(--primary-text-color)
+                            lock:
+                              - background-color: var(--ha-card-background)
+                          tap_action:
+                            action: call-service
+                            service: script.deebot_clean
+                          variables:
+                            enabled: |
+                              [[[ 
+                                return ((!states['input_text.tuuba_queue'].state || 
+                                    states['input_text.tuuba_queue'].state.length === 0)
+                                    && ['docked', 'idle', 'error', 'returning'].includes(entity.state))
+                              ]]]
+              - type: vertical-stack
+                cards:
+                  - type: custom:vacuum-card
+                    entity: vacuum.tuuba
+                    image: /local/deebot.svg
+                    stats:
+                      default:
+                        - entity_id: sensor.tuuba_life_span_brush
+                          unit: '%'
+                          subtitle: Main Brush
+                          value_template: '{{ value | int }}'
+                        - entity_id: sensor.tuuba_life_span_side_brush
+                          unit: '%'
+                          subtitle: Side Brush
+                          value_template: '{{ value | int }}'
+                        - entity_id: sensor.tuuba_life_span_filter
+                          unit: '%'
+                          subtitle: Filter
+                          value_template: '{{ value | int }}'
+                      cleaning:
+                        - entity_id: sensor.tuuba_stats_area
+                          unit: m²
+                          subtitle: Area
+                        - entity_id: sensor.tuuba_stats_time
+                          unit: min
+                          subtitle: Time
+                    show_status: true
+                    show_toolbar: false
+                    compact_view: false
+          - type: horizontal-stack
+            cards:
+              - type: conditional
+                conditions:
+                  - entity: vacuum.tuuba
+                    state: cleaning
+                card:
+                  type: custom:button-card
+                  color: auto
+                  icon: mdi:pause
+                  name: Paus
+                  tap_action:
+                    action: call-service
+                    service: vacuum.pause
+                    service_data:
+                      entity_id: vacuum.tuuba
+                  styles:
+                    card:
+                      - height: 80px
+                      - background-color: var(-color)
+              - type: conditional
+                conditions:
+                  - entity: vacuum.tuuba
+                    state: paused
+                card:
+                  type: custom:button-card
+                  color: auto
+                  icon: mdi:play-pause
+                  name: Jätka
+                  tap_action:
+                    action: call-service
+                    service: vacuum.start
+                    service_data:
+                      entity_id: vacuum.tuuba
+                  styles:
+                    card:
+                      - height: 80px
+                      - background-color: var(-color)
+              - type: custom:button-card
+                template: vacuum_service_nonsq
+                icon: mdi:stop
+                name: Stop
+                tap_action:
+                  service: vacuum.stop
+                variables:
+                  enabled: |
+                    [[[ 
+                      return !(['cleaning', 'paused', 'returning'].includes(entity.state))
+                    ]]]
+              - type: custom:button-card
+                template: vacuum_service_nonsq
+                icon: mdi:home-map-marker
+                name: Mine koju
+                tap_action:
+                  service: vacuum.return_to_base
+                variables:
+                  enabled: |
+                    [[[ 
+                      return ['docked', 'returning'].includes(entity.state)
+                    ]]]
+              - type: custom:button-card
+                color: auto
+                icon: mdi:map-marker
+                name: Leia mind
+                tap_action:
+                  action: call-service
+                  service: vacuum.locate
+                  service_data:
+                    entity_id: vacuum.tuuba
+                styles:
+                  card:
+                    - height: 80px
+                    - background-color: var(-color)
