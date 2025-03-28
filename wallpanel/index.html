@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moving Clock</title>
+    <style>
+        body {
+            background-color: black;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            margin: 0;
+            position: relative;
+        }
+        #clock {
+            position: absolute;
+            text-align: center;
+            white-space: nowrap;
+        }
+        #time {
+            font-size: 12vw;
+            font-weight: normal;
+        }
+        #date {
+            font-size: 4vw;
+            font-weight: lighter;
+        }
+    </style>
+</head>
+<body>
+    <div id="clock">
+        <div id="time"></div>
+        <div id="date"></div>
+    </div>
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            const dateString = now.toLocaleDateString('et-EE', options);
+            const timeString = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+            document.getElementById("time").innerHTML = timeString;
+            document.getElementById("date").innerHTML = dateString;
+        }
+
+        function moveClock() {
+            const clock = document.getElementById("clock");
+            const maxX = window.innerWidth - clock.offsetWidth;
+            const maxY = window.innerHeight - clock.offsetHeight;
+            
+            const randomX = Math.random() * maxX;
+            const randomY = Math.random() * maxY;
+            
+            clock.style.left = `${randomX}px`;
+            clock.style.top = `${randomY}px`;
+        }
+
+        function refreshClock() {
+            updateClock();
+            moveClock();
+        }
+
+        updateClock();
+        moveClock();
+        setInterval(refreshClock, 60000); // Update every minute
+    </script>
+</body>
+</html>
