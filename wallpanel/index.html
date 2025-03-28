@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moving Clock</title>
+    <title>Moving Clock with Fade Effect</title>
     <style>
         body {
             background-color: black;
@@ -21,6 +21,8 @@
             position: absolute;
             text-align: center;
             white-space: nowrap;
+            transition: opacity 0.8s ease; /* Added transition for opacity */
+            opacity: 1; /* Start visible */
         }
         #time {
             font-size: 12vw;
@@ -47,6 +49,14 @@
             document.getElementById("date").innerHTML = dateString;
         }
 
+        function fadeOut() {
+            return new Promise(resolve => {
+                const clock = document.getElementById("clock");
+                clock.style.opacity = '0';
+                setTimeout(resolve, 800); // Match with transition duration
+            });
+        }
+
         function moveClock() {
             const clock = document.getElementById("clock");
             const maxX = window.innerWidth - clock.offsetWidth;
@@ -59,14 +69,27 @@
             clock.style.top = `${randomY}px`;
         }
 
-        function refreshClock() {
-            updateClock();
-            moveClock();
+        function fadeIn() {
+            return new Promise(resolve => {
+                const clock = document.getElementById("clock");
+                clock.style.opacity = '1';
+                setTimeout(resolve, 800); // Match with transition duration
+            });
         }
 
+        async function refreshClock() {
+            updateClock(); // Update time and date
+            await fadeOut(); // Fade out from current location
+            moveClock(); // Move to new location while invisible
+            await fadeIn(); // Fade in at new location
+        }
+
+        // Initial setup
         updateClock();
         moveClock();
-        setInterval(refreshClock, 60000); // Update every minute
+        
+        // Update every minute
+        setInterval(refreshClock, 60000);
     </script>
 </body>
 </html>
