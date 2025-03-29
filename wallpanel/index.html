@@ -22,6 +22,9 @@
             text-align: center;
             white-space: nowrap;
             transition: opacity 1s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            gap: 1vw;
         }
         #time {
             font-size: 12vw;
@@ -34,7 +37,6 @@
         #weather {
             font-size: 2.5vw;
             font-weight: lighter;
-            margin-top: 0.5vw;
         }
     </style>
 </head>
@@ -84,8 +86,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.current_weather) {
-                        const temp = data.current_weather.temperature;
-                        const wind = data.current_weather.windspeed;
+                        const temp = Math.round(data.current_weather.temperature);
                         document.getElementById("weather").innerText = `Õues on ${temp}°C`;
                     } else {
                         document.getElementById("weather").innerText = "Ilmaandmed pole kättesaadavad";
