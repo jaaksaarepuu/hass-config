@@ -32,7 +32,7 @@
             font-weight: lighter;
         }
         #weather {
-            font-size: 3vw;
+            font-size: 2.5vw;
             font-weight: lighter;
             margin-top: 0.5vw;
         }
@@ -86,13 +86,13 @@
                     if (data.current_weather) {
                         const temp = data.current_weather.temperature;
                         const wind = data.current_weather.windspeed;
-                        document.getElementById("weather").innerText = `🌡️ ${temp}°C  💨 ${wind} km/h`;
+                        document.getElementById("weather").innerText = `Õues on ${temp}°C`;
                     } else {
-                        document.getElementById("weather").innerText = "Weather data unavailable";
+                        document.getElementById("weather").innerText = "Ilmaandmed pole kättesaadavad";
                     }
                 })
                 .catch(() => {
-                    document.getElementById("weather").innerText = "Weather data unavailable";
+                    document.getElementById("weather").innerText = "Ilmaandmed pole kättesaadavad";
                 });
         }
 
@@ -101,8 +101,8 @@
             moveClock();
         }
 
-        updateClock();
         moveClock();
+        updateClock();
         fetchWeather();
         setInterval(refreshClock, 60000); // Update every minute
     </script>
