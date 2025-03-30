@@ -31,7 +31,7 @@
             font-weight: lighter;
         }
         #weather {
-            font-size: 3.5vw;
+            font-size: 3vw;
             font-weight: lighter;
         }
     </style>
@@ -77,17 +77,12 @@
                         const temp = Math.round(data.current_weather.temperature);
                         document.getElementById("weather").innerText = `Õues on ${temp}°C`;
                         
-                        let rainText = "";
-                        if (data.daily && data.daily.precipitation_sum && data.daily.precipitation_sum[0] > 0) {
-                            rainText = "Täna on oodata vihma 🌧️";
-                        }
-                        
                         if (data.daily && data.daily.precipitation_probability_max) {
                             const rainChance = data.daily.precipitation_probability_max[0];
-                            rainText += ` (${rainChance}%)`;
+                            document.getElementById("rain").innerText = `🌧️ ${rainChance}% vihma tõenäosus`;
+                        } else {
+                            document.getElementById("rain").innerText = "";
                         }
-                        
-                        document.getElementById("rain").innerText = rainText;
                     } else {
                         document.getElementById("weather").innerText = "Ilmaandmed pole kättesaadavad";
                     }
