@@ -21,30 +21,27 @@
             position: absolute;
             text-align: center;
             white-space: nowrap;
-            transition: opacity 1s ease-in-out;
-            display: flex;
-            flex-direction: column;
-            gap: 1vw;
         }
         #time {
             font-size: 12vw;
             font-weight: normal;
         }
         #date {
-            font-size: 3.5vw;
+            font-size: 4vw;
             font-weight: lighter;
         }
         #weather {
-            font-size: 2.5vw;
+            font-size: 3vw;
             font-weight: lighter;
         }
     </style>
 </head>
-<body onclick="window.history.back()">
+<body>
     <div id="clock">
         <div id="time"></div>
         <div id="date"></div>
-        <div id="weather">Loading weather...</div>
+        <div id="weather">Laen ilmaandmeid...</div>
+        <div id="rain"></div>
     </div>
     <script>
         function updateClock() {
@@ -58,43 +55,39 @@
 
         function moveClock() {
             const clock = document.getElementById("clock");
+            const maxX = window.innerWidth - clock.offsetWidth;
+            const maxY = window.innerHeight - clock.offsetHeight;
             
-            // Fade out
-            clock.style.opacity = "0";
-
-            setTimeout(() => {
-                const maxX = window.innerWidth - clock.offsetWidth;
-                const maxY = window.innerHeight - clock.offsetHeight;
-                
-                const randomX = Math.random() * maxX;
-                const randomY = Math.random() * maxY;
-                
-                clock.style.left = `${randomX}px`;
-                clock.style.top = `${randomY}px`;
-
-                // Fade in after moving
-                clock.style.opacity = "1";
-            }, 1000); // Wait for fade-out animation
+            const randomX = Math.random() * maxX;
+            const randomY = Math.random() * maxY;
+            
+            clock.style.left = `${randomX}px`;
+            clock.style.top = `${randomY}px`;
         }
 
         function fetchWeather() {
             const lat = 59.304283;
             const lon = 24.621762;
-            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=precipitation_sum&timezone=Europe/Tallinn`;
-
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=precipitation_sum,precipitation_probability_max&timezone=Europe/Tallinn`;
+            
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     if (data.current_weather) {
                         const temp = Math.round(data.current_weather.temperature);
-                        let weatherText = `Õues on ${temp}°C`;
+                        document.getElementById("weather").innerText = `Õues on ${temp}°C`;
                         
-                        // Check if precipitation is expected today
+                        let rainText = "";
                         if (data.daily && data.daily.precipitation_sum && data.daily.precipitation_sum[0] > 0) {
-                            weatherText += ". Täna on oodata vihma.";
+                            rainText = "Täna on oodata vihma 🌧️";
                         }
                         
-                        document.getElementById("weather").innerText = weatherText;
+                        if (data.daily && data.daily.precipitation_probability_max) {
+                            const rainChance = data.daily.precipitation_probability_max[0];
+                            rainText += ` (${rainChance}%)`;
+                        }
+                        
+                        document.getElementById("rain").innerText = rainText;
                     } else {
                         document.getElementById("weather").innerText = "Ilmaandmed pole kättesaadavad";
                     }
@@ -109,8 +102,8 @@
             moveClock();
         }
 
-        moveClock();
         updateClock();
+        moveClock();
         fetchWeather();
         setInterval(refreshClock, 60000); // Update every minute
     </script>
