@@ -83,9 +83,7 @@
                         
                         if (data.daily && data.daily.precipitation_probability_max) {
                             const rainChance = data.daily.precipitation_probability_max[0];
-                            document.getElementById("rain").innerText = `🌧️ ${rainChance}% vihma tõenäosus`;
-                        } else {
-                            document.getElementById("rain").innerText = "";
+                            document.getElementById("weather").innerText += ` 🌧️ ${rainChance}%`;
                         }
                     } else {
                         document.getElementById("weather").innerText = "Ilmaandmed pole kättesaadavad";
