@@ -81,7 +81,7 @@
                         const temp = Math.round(data.current_weather.temperature);
                         document.getElementById("weather").innerText = `Õues on ${temp}°C`;
                         
-                        if (data.daily && data.daily.precipitation_probability_max) {
+                        if (data.daily && data.daily.precipitation_probability_max[0] > 0) {
                             const rainChance = data.daily.precipitation_probability_max[0];
                             document.getElementById("weather").innerText += ` 🌧️ ${rainChance}%`;
                         }
