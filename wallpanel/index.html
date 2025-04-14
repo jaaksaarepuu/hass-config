@@ -80,10 +80,12 @@
                     if (data.current) {
                          const temp = Math.round(data.current.apparent_temperature);
                          document.getElementById("weather").innerText = `Õues tundub ${temp}°C`;
+                        /*
                         if (data.daily && data.daily.precipitation_probability_max[0] > 10) {
                             const rainChance = data.daily.precipitation_probability_max[0];
                             document.getElementById("weather").innerText += ` (🌧️ ${rainChance}%)`;
                         }
+                        */
                     } else {
                         document.getElementById("weather").innerText = "Ilmaandmed pole kättesaadavad";
                     }
